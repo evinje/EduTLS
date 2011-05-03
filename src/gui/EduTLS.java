@@ -356,15 +356,17 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		return false;
 	}
 	
-	private void connectaTo(String host) {
+	private void connectTo(String host) {
 		LogEvent lo = new LogEvent("Connecting to " + host, "");
 		Log.get().add(lo);
 		PeerSocket peer;
 		try {
 			peer = new server.PeerSocket(host);
 			engine = new TLSEngine(peer, this);
-			lo.addDetails("Successful");
-			
+			if(engine.connect())
+				lo.addDetails("Successful");
+			else
+				lo.addDetails("Connection failed");
 		} catch (UnknownHostException e) {
 			lo.addDetails(e.getMessage());
 			e.printStackTrace();
@@ -372,6 +374,9 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 			lo.addDetails(e.getMessage());
 			e.printStackTrace();
 		} catch (AlertException e) {
+			lo.addDetails(e.getMessage());
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			lo.addDetails(e.getMessage());
 			e.printStackTrace();
 		}

@@ -13,7 +13,10 @@ import tls.TLSAlert;
 import tls.TLSEngine;
 import tls.TLSRecord;
 
+import common.Log;
+import common.LogEvent;
 import common.Tools;
+
 
 public class Listener implements Runnable {
 	public static final int PORT = 12345;
@@ -23,7 +26,6 @@ public class Listener implements Runnable {
 	private boolean listen;
 	//private ConnectionStates connectionStates;
 	private IApplication app;
-	//	private Thread connectionThread;
 
 	public Listener(IApplication app) {
 		//connectionStates = new ConnectionStates();
@@ -32,12 +34,6 @@ public class Listener implements Runnable {
 		Thread t = new Thread(this);
 		t.start();
 	}
-
-	//	public Listener(IApplication app,IPeerHost peer) {
-	//		connectionStates = new ConnectionStates();
-	//		this.app = app;
-	//		new ConnectionHandler(peer, connectionStates);
-	//	}
 
 	@Override
 	public void run() {
@@ -97,6 +93,7 @@ public class Listener implements Runnable {
 					if(b[0]==CONNECTION_TYPE_TLS) {
 //						Tools.print("New TLS connection incoming...");
 						peer = new PeerSocket(socket);
+						Log.get().add(new LogEvent("Incoming TLS connection from " + peer.getPeerId(),""));
 						//if(!connectionStates.stateExist(peer.getPeerId()))
 						//connectionStates.addState(tlsengine.getState());
 						tlsengine = new TLSEngine(peer, app);
@@ -138,6 +135,7 @@ public class Listener implements Runnable {
 					}
 					else if(b[0]==CONNECTION_TYPE_TEST) {
 //						Tools.print("New incoming test");
+						Log.get().add(new LogEvent("Incoming test connection from " + peer.getPeerId(),""));
 						socket.getOutputStream().write(new byte[] { CONNECTION_TYPE_TEST });
 					}
 					else
@@ -157,6 +155,7 @@ public class Listener implements Runnable {
 			finally {
 				if(socket != null && socket.isConnected()) {
 					try {
+						Log.get().add(new LogEvent("Closing connection",""));
 						socket.close();
 					} catch (IOException e) {
 						Tools.printerr("" + e.getMessage());

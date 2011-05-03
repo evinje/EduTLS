@@ -46,7 +46,8 @@ public class AlertException extends Exception{
 	    this.alertDescription = description;
 	    this.alertLevel = level;
 	    this.alertCode = code;
-	    Log.get().add(new LogEvent("AlertException!",description));
+	    String caller = Thread.currentThread().getStackTrace()[2].getClassName() + " " + Thread.currentThread().getStackTrace()[2].getLineNumber();
+	    Log.get().add(new LogEvent("AlertException!", description + " (From: " + caller + ")"));
 //	    Tools.print("Oh, AlertException: " + description);
 //	    Tools.print(Thread.currentThread().getStackTrace()[2].getClassName() + " " + Thread.currentThread().getStackTrace()[2].getLineNumber());
 	    }

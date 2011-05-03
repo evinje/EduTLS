@@ -135,8 +135,8 @@ public class TLSHandshake {
 			// Client send ClientHello, Server respond with ServerHello
 			state.addHandshakeLog("Received: ClientHello");
 			
-			if(lastMessage != HELLO_REQUEST)
-				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
+			if(lastMessage != HELLO_REQUEST && lastMessage != FINISHED)
+				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected handshake message: " + lastMessage);
 			serverRandom = new byte[RANDOM_SIZE];
 			genRandom(serverRandom);
 			clientHello = new ClientHello(content);

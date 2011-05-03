@@ -110,12 +110,13 @@ public class TLSEngine {
 	 * @returns	Nothing
 	 */
 	public void receive(TLSRecord record) throws AlertException  {
-		Log.get().add(new LogEvent("Received TLSRecord " + record.getContentTypeName(), Tools.byteArrayToString(record.getPlaintext())));
+		
 		if(record.getContentType() == ALERT) {
 			Tools.printerr("RECEIVED ALERT: " + Tools.byteArrayToString(record.getPlaintext()));
-			
+			Log.get().add(new LogEvent("Received Alert", Tools.byteArrayToString(record.getPlaintext())));	
 		}
 		else if(record.getContentType() == APPLICATION) {
+			Log.get().add(new LogEvent("Received Application message", Tools.byteArrayToString(record.getPlaintext())));
 			if(!state.getChangeCipherSpec(state.getEntityType(true)))
 				throw new AlertException(AlertException.alert_fatal,AlertException.insufficient_security, "Cipher Spec not changed");
 			if(!handshake.isFinished())

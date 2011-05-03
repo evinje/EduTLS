@@ -102,6 +102,8 @@ public class PeerSocket implements IPeerHost {
 		byte[] tmp, input;
 		int size = 0;
 		try {
+			if(!isConnected())
+				reconnect();
 //			socket.setKeepAlive(true);
 			size = is.read(b);
 			
@@ -145,6 +147,7 @@ public class PeerSocket implements IPeerHost {
 //				}
 //			}
 		} catch (IOException e) {
+			Tools.print("");
 			e.printStackTrace();
 		}
 //		return records;
@@ -154,9 +157,11 @@ public class PeerSocket implements IPeerHost {
 	@Override
 	public synchronized void write(TLSRecord record) {
 		try {
+			if(!isConnected())
+				reconnect();
 			os.write(record.getCiphertext());
 			os.flush();
-			Thread.sleep(80);
+			Thread.sleep(100);
 		} catch (IOException e) {
 			Tools.printerr("" + e.getMessage());
 			e.printStackTrace();

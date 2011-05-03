@@ -196,7 +196,9 @@ public class State {
 	}
 	
 	public String getHandshakeLog() {
-		return handshakeLog.toString();
+		String tmp = handshakeLog.toString();
+		handshakeLog = new StringBuilder();
+		return tmp;
 	}
 	
 	private void generateKeys() {

@@ -11,13 +11,14 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
-/*
- *  struct {
-          ContentType type;
-          ProtocolVersion version; (Left out)
-          uint16 length;
-          opaque fragment[TLSPlaintext.length];
-      } TLSPlaintext;
+
+/**
+ * Every message sent to and received from
+ * TLSEngine must be a TLSRecord. The content 
+ * type of a TLSRecord may be HANDSHAKE,
+ * ALERT, APPLICATION or CHANGE CIPHER SPEC.
+ *
+ * @author 	Eivind Vinje
  */
 public class TLSRecord {
 	private State state;
@@ -29,6 +30,12 @@ public class TLSRecord {
 	private byte[] plaintext;
 	private byte[] ciphertext;
 
+	/**
+	 * TLSRecord constructor for an Alert message
+	 * @param state State, the current connection state
+	 * @param alert	TLSAlert, the alert object
+	 * @returns	Nothing, it is a constructor
+	 */
 	public TLSRecord(State state, TLSAlert alert) {
 		this.state = state;
 		init();
@@ -38,6 +45,12 @@ public class TLSRecord {
 		encrypt();
 	}
 
+	/**
+	 * TLSRecord constructor for a handshake message
+	 * @param state State, the current connection state
+	 * @param handshake	IHandshakeMessage, the handshake object
+	 * @returns	Nothing, it is a constructor
+	 */
 	public TLSRecord(State state, IHandshakeMessage handshake) {
 		this.state = state;
 		init();
@@ -54,8 +67,14 @@ public class TLSRecord {
 		encrypt();
 	}
 
+	/**
+	 * TLSRecord constructor for an application message
+	 * @param state State, the current connection state
+	 * @param input	byte[], the byte array value of the record
+	 * @returns	Nothing, it is a constructor
+	 */
 	public TLSRecord(State state, byte[] input) throws AlertException {
-		Tools.print("New TLSRecord: " + state.getEntityType() + " " +Tools.byteArrayToString(input));
+		//Tools.print("New TLSRecord: " + state.getEntityType() + " " +Tools.byteArrayToString(input));
 		this.state = state;
 		int versionNumber;
 		if(input.length < TLSEngine.HEADER_SIZE)

@@ -70,7 +70,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		super("EduTLS");
 		SYSTEM_START = System.currentTimeMillis();
 		setSize(800, 600);
-		setResizable(false);
+		setResizable(true);
 		setVisible(true);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(null);

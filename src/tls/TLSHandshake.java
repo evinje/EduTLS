@@ -195,7 +195,6 @@ public class TLSHandshake {
 			genRandom(clientRandom);
 			clientHello = new ClientHello(clientRandom,sessionId,null);
 			responseQueue.add(clientHello);
-			state.addHandshakeLog("Received: HelloRequest");
 			break;
 		case SERVER_HELLO:
 			// Server send ServerHello, no response from Client.

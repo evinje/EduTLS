@@ -186,12 +186,13 @@ public class State {
 	}
 	
 	public void addHandshakeLog(String log) {
+		handshakeLog.append(LogEvent.NEWLINE);
 		double time = Math.abs(System.currentTimeMillis() - LogEvent.APP_START);
 		StringBuilder sb = new StringBuilder();
 		sb.append(time/1000);
 		while(sb.length() < 8)
 			sb.insert(0," ");
-		handshakeLog.append("[" + sb.toString() + "] " + log + LogEvent.NEWLINE);
+		handshakeLog.append("[" + sb.toString() + "] " + log);
 	}
 	
 	public String getHandshakeLog() {

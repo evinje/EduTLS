@@ -1,6 +1,7 @@
 package tls;
 
-import common.Tools;
+import common.Log;
+import common.LogEvent;
 
 public class AlertException extends Exception{
 	/**
@@ -45,6 +46,7 @@ public class AlertException extends Exception{
 	    this.alertDescription = description;
 	    this.alertLevel = level;
 	    this.alertCode = code;
+	    Log.get().add(new LogEvent("AlertException!",description));
 //	    Tools.print("Oh, AlertException: " + description);
 //	    Tools.print(Thread.currentThread().getStackTrace()[2].getClassName() + " " + Thread.currentThread().getStackTrace()[2].getLineNumber());
 	    }

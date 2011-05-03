@@ -293,7 +293,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 //		for(int i = 0; i < 3; i++)
 //			addLog("Test " + i,"Lots of fun " + i);
 		lstModelSessions.add(0, "localhost");
-		//this.txtAddConnection.setText("192.168.10.105");
+		this.txtAddConnection.setText("192.168.10.105");
 	}
 
 	/*

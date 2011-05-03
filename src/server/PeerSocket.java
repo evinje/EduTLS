@@ -94,7 +94,7 @@ public class PeerSocket implements IPeerHost {
 		byte[] tmp, input;
 		int size = 0;
 		try {
-			socket.setKeepAlive(true);
+//			socket.setKeepAlive(true);
 			size = is.read(b);
 			
 			if(size>0) {
@@ -105,7 +105,7 @@ public class PeerSocket implements IPeerHost {
 				if(contentSize == (size-TLSEngine.HEADER_SIZE)) {
 					try {
 						record = new TLSRecord(state,input);
-						socket.setKeepAlive(false);
+//						socket.setKeepAlive(false);
 						return record;
 					} catch (AlertException e) {
 						Tools.printerr(e.getAlertDescription());

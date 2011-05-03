@@ -17,6 +17,13 @@ import crypto.ICompression;
 import crypto.IKeyExchange;
 import crypto.IMac;
 
+/*
+ * TLSEngine is the heart of the
+ * application, working as a layer
+ * between the other host and
+ * the application user interface
+ * 
+ */
 public class TLSEngine {
 	// TLS max record size is 2^14
 	public static final int RECORD_SIZE = 16384;
@@ -25,28 +32,26 @@ public class TLSEngine {
 	public static final Charset ENCODING = Charset.forName("UTF-8");
 	public static byte VERSION_TLSv1 = 33;
 	
+	// The Record types according to RFC5246
 	public static final byte ALERT = 21;
 	public static final byte APPLICATION = 23;
 	public static final byte HANDSHAKE = 22;
 	
-//	public static enum ContentType { 
-//		Alert (21), Application (23), Handshake (22);
-//		int ct;
-//		ContentType(int ct) {  this.ct = ct; }
-//		public byte getByte() { return (byte)ct; }
-//		}
+	// List of all cipher suites
 	public static ArrayList<CipherSuite> cipherSuites = getAllCipherSuites();
 	
-	private IPeerHost peer;	
-	private TLSRecord record;
 	private TLSHandshake handshake;
 	private IApplication app;
 	private State state;
+	private IPeerHost peer;	
 	
-//	public TLSEngine(IApplication app) {
-//		this.app = app;
-//	}
-	
+	/**
+	 * The TLSEngine constructor
+	 * @param peer	IPeerHost, the remote peer
+	 * @param app	IApplication, the application utilizing the TLSEngine
+	 * @returns	Nothing, it is a constructor
+	 */
+
 	public TLSEngine(IPeerHost peer, IApplication app) throws AlertException {
 		this.peer = peer;
 		this.app = app;
@@ -55,6 +60,10 @@ public class TLSEngine {
 			handshake = new TLSHandshake(state);
 	}
 	
+	/**
+	 * Connect to the remote peer
+	 * @returns	boolean Indicating if the connection was established
+	 */
 	public boolean connect() throws AlertException, InterruptedException {
 		LogEvent le = new LogEvent("Connecting to " + peer.getPeerId(),"");
 		Log.get().add(le);
@@ -84,14 +93,27 @@ public class TLSEngine {
 		return false;
 	}
 	
+	/**
+	 * Method to check if the handshake has
+	 * finished successfully
+	 * 
+	 * @returns	boolean
+	 */
 	public boolean handshakeFinished() {
 		return handshake.isFinished();
 	}
 	
+	/**
+	 * Receive an incoming TLSRecord
+	 * 
+	 * @param record	TLSRecord
+	 * @returns	Nothing
+	 */
 	public void receive(TLSRecord record) throws AlertException  {
 		Log.get().add(new LogEvent("Received TLSRecord " + record.getContentTypeName(), Tools.byteArrayToString(record.getPlaintext())));
 		if(record.getContentType() == ALERT) {
 			Tools.printerr("RECEIVED ALERT: " + Tools.byteArrayToString(record.getPlaintext()));
+			
 		}
 		else if(record.getContentType() == APPLICATION) {
 			if(!state.getChangeCipherSpec(state.getEntityType(true)))
@@ -111,10 +133,21 @@ public class TLSEngine {
 		}
 		
 	}
+	
+	/**
+	 * @see public synchronized void send(TLSRecord record)
+	 */
 	public void send(byte[] message) throws AlertException {
 		send(new TLSRecord(state,message,APPLICATION));
 	}
 
+	/**
+	 * Sends a record object to the remote peer
+	 * 
+	 * @param record TLSRecord, the object to send
+	 * @returns	Nothing
+	 * @throws AlertException
+	 */
 	public synchronized void send(TLSRecord record) throws AlertException {
 		LogEvent le = new LogEvent("Sending TLSRecord","");
 		if(record.getContentType()==APPLICATION)
@@ -129,13 +162,19 @@ public class TLSEngine {
 		peer.write(record);
 	}
 	
+	/**
+	 * Returns the state object containing
+	 * information about the current connection 
+	 * state
+	 * 
+	 * @returns	State
+	 */
 	public State getState() {
 		return state;
 	}
 	
 	private static ArrayList<CipherSuite> getAllCipherSuites() {
 		ArrayList<CipherSuite> tmpCipherSuites = new ArrayList<CipherSuite>();
-		
 		
 		byte[] value = new byte[] {(byte)0xC0,0x23};
 		IMac sha256 = new crypto.mac.SHA256();
@@ -145,14 +184,17 @@ public class TLSEngine {
 		IKeyExchange rsa = new crypto.keyexchange.RSA(512);
 		IKeyExchange dh = new crypto.keyexchange.DH(512);
 		
-		String name = "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256";
+		// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+		String name = "ECDHE_AES256_SHA256";
 		tmpCipherSuites.add(new CipherSuite(name,value, sha256, aes, compression, dh));
 		
-		name = "TLS_RSA_WITH_AES_256_CBC_SHA";
+		// TLS_RSA_WITH_AES_256_CBC_SHA
+		name = "RSA_AES256_SHA-1";
 		value = new byte[] {0x00, 0x35};
 		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, compression, rsa));
 		
-		name = "TLS_RSA_WITH_AES_128_CBC_SHA";
+		// TLS_RSA_WITH_AES_128_CBC_SHA
+		name = "RSA_AES128_SHA-1";
 		value = new byte[] {0x00, 0x2F};
 		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, compression, rsa));
 		

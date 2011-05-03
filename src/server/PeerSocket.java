@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 import tls.AlertException;
 import tls.State;
 import tls.TLSEngine;
 import tls.TLSRecord;
 
+import common.Log;
+import common.LogEvent;
 import common.Tools;
 
 public class PeerSocket implements IPeerHost {
@@ -24,19 +24,27 @@ public class PeerSocket implements IPeerHost {
 	private boolean isClient;
 
 	public static boolean testConnection(String host) {
+		LogEvent le = new LogEvent("Testing connection to " + host,"");
+		Log.get().add(le);
 		try {
 			Socket tmpSocket = new Socket(host, Listener.PORT);
+			le.addDetails("Socket has responded");
 			tmpSocket.setSoTimeout(SOCKET_TIMEOUT);
 			tmpSocket.getOutputStream().write(new byte[] { Listener.CONNECTION_TYPE_TEST });
+			le.addDetails("Wrote CONNECTION_TYPE_TEST to socket");
 			byte[] b = new byte[1];
 			tmpSocket.getInputStream().read(b);
+			le.addDetails("Got response from socket: " + Tools.byteArrayToString(b));
 			tmpSocket.close();
 			if(b[0]!=Listener.CONNECTION_TYPE_TEST)
 				return false;
 			// host is alive :D
+			le.addDetails("Test finish");
 		} catch (UnknownHostException e) {
+			le.addDetails("Error: Unknown host");
 			return false;
 		} catch (IOException e) {
+			le.addDetails("Error: " + e.getMessage());
 			return false;
 		}
 		return true;

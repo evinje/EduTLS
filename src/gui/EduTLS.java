@@ -352,7 +352,6 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	private boolean testConnection(String host) {
 		if(PeerSocket.testConnection(host))
 			return true;
-		Log.get().add(new LogEvent("Host down: " + host,""));
 		return false;
 	}
 	

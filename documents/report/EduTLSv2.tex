@@ -1,0 +1,96 @@
+%\documentclass[pdftex,10pt,b5paper,twoside]{book}
+\documentclass[12pt,b5paper,titlepage]{report}
+\usepackage[lmargin=25mm,rmargin=25mm,tmargin=27mm,bmargin=30mm]{geometry}
+
+\usepackage{listings}
+\usepackage{float}
+\usepackage[Glenn]{fncychap}
+\usepackage{fancyhdr}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{parskip}
+\usepackage{appendix}
+\usepackage{lmodern}
+\usepackage{acronym}
+\usepackage[pdftex]{graphicx}
+\usepackage{url}
+%\usepackage{lineno}
+\usepackage{color}
+\usepackage[pdfborder={0 0 0}, colorlinks=true,citecolor=blue, linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage[utf8]{inputenc}
+\definecolor{darkgray}{gray}{0.30}
+\lstset{language=Java,captionpos=b,tabsize=3,frame=lines,keywordstyle=\color{blue},commentstyle=\color{darkgray},stringstyle=\color{red},numbers=left,numberstyle=\tiny,numbersep=5pt,breaklines=true,showstringspaces=false,basicstyle=\footnotesize,emph={label}}
+\renewcommand\contentsname{Table of Contents}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\setlength{\parskip}{10pt} 
+\pagenumbering{roman}
+\pagestyle{plain}
+
+\newcommand\myclass[1]{\textsf{#1}}
+\newcommand\myfunction[1]{\textit{#1}}
+\newcommand\myobject[1]{\textit{#1}}
+\newcommand\mypackage[1]{\textsf{#1}}
+
+\begin{document}
+%\linenumbers
+\sloppy
+
+\title{Educational implementation of SSL/TLS}
+\author{Eivind Vinje}
+
+% FRONT PAGE
+\begin{titlepage}
+\begin{center}
+\textsc{NORWEGIAN UNIVERSITY OF SCIENCE AND TECHNOLOGY\\
+FACULTY OF  INFORMATION TECHNOLOGY, MATHEMATICS AND ELECTRICAL ENGINEERING} \\
+\vspace{0.5cm} 
+% crop-et fra http://www.ntnu.no/infoavdelingen/selvhjelp/logoer/ntnu/NTNU_engelsk_RGB.png
+\includegraphics[scale=0.5]{img/NTNU-logo} \\
+\vspace{2.5cm} 
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{\huge \bfseries Educational implementation of SSL/TLS}\\[0.4cm] 
+\rule{\linewidth}{0.5mm} \\[3.5cm]
+\textsc{\Large Eivind Vinje}\\[1.4cm]
+\textsc{\Large December 2010}\\
+\end{center}
+\end{titlepage}
+
+% PROBLEM DESCIPTION
+\begin{center}
+\textsc{NORWEGIAN UNIVERSITY OF SCIENCE AND TECHNOLOGY\\
+FACULTY OF  INFORMATION TECHNOLOGY, MATHEMATICS AND ELECTRICAL ENGINEERING} \\
+\vspace{0.5cm} 
+% crop-et fra http://www.ntnu.no/infoavdelingen/selvhjelp/logoer/ntnu/NTNU_engelsk_RGB.png
+\includegraphics[scale=0.5]{img/NTNU-logo} \\
+
+\vspace{1.0cm}
+{\Huge{PROJECT ASSIGNMENT}}
+\vspace{1.0cm}
+
+\begin{tabular}{ p{4cm} p{11cm}}
+Student's name:	& Eivind Vinje \\
+Course: & TTM4531 Information Security, Specialization Project \\
+Title: & Educational implementation of SSL/TLS \\
+%\vspace{1cm}
+Description: & \\
+\end{tabular}
+{\small{\begin{tabular}{p{15cm}}
+\vspace{0.2cm}
+SSL/TLS is the most common and widely used secure protocol in Internet. It is a package of more than 30 cryptographic primitives and protocols. For students studying information security it is of a crucial importance to have a good understanding of how the different parts are working. The aim of the project will be to develop an educational implementation of SSL/TLS that could be used when teaching information security. The basic idea is to create a simple protocol that encrypts communication between two hosts, implemented in Java, where versions of DH, RSA, AES and SHA-1 are designed and implemented accompanied by a graphical interface that will monitor what is happening in every moment of the work of the algorithm (protocol).
+\end{tabular}  }}
+
+\begin{tabular}{ p{4cm} p{11cm}}
+Deadline: & 2010-12-20 \\
+Submission date: & 2010-12-16 \\
+Department: & Department of Telematics \\
+Supervisor: & Prof. Danilo Gligoroski\\\\
+\end{tabular}
+\vspace{0.5cm}
+
+Trondheim, \today 
+
+\vspace{1cm}
+\line(1,0){150} \\
+Danilo Gligoroski
+\addcontentsline{toc}{chapter}{Problem Description}
+\end{center}

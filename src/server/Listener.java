@@ -135,7 +135,7 @@ public class Listener implements Runnable {
 					}
 					else if(b[0]==CONNECTION_TYPE_TEST) {
 //						Tools.print("New incoming test");
-						Log.get().add(new LogEvent("Incoming test connection from " + peer.getPeerId(),""));
+						Log.get().add(new LogEvent("Incoming test connection from " + socket.getInetAddress().getHostAddress(),""));
 						socket.getOutputStream().write(new byte[] { CONNECTION_TYPE_TEST });
 					}
 					else

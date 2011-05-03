@@ -1,5 +1,12 @@
 package common;
 
+/**
+ * The Tools class provides several
+ * string and byte manipulation methods
+ *
+ * @author 	Eivind Vinje
+ */
+
 public class Tools {
 	private static String[] s_hexUpper;
 	// -----------------------------------------------------------------
@@ -15,9 +22,12 @@ public class Tools {
 				s_hexUpper[i] = sHexUpper;
 		}
 	}
-	// -----------------------------------------------------------------
-	// Creates a hex string.
-	// -----------------------------------------------------------------
+	/**
+	 * Creates a hex string of a byte[] array
+	 * 
+	 * @param array	byte[]
+	 * @returns	String Converts the byte[] array to String 
+	 */
 	public static String toHexString(byte[] array) {       
 		StringBuffer buffer = new StringBuffer (array.length*2);
 		for (int i=0;i<array.length;i++)
@@ -26,7 +36,7 @@ public class Tools {
 	}
 	
 	/**
-	    * <p>Returns a byte array from a string of hexadecimal digits.</p>
+	    * Returns a byte array from a string of hexadecimal digits.
 	    *
 	    * @param s a string of hexadecimal ASCII characters
 	    * @return the decoded byte array from the input hexadecimal string.
@@ -46,8 +56,8 @@ public class Tools {
 	   }
 	   
 	   /**
-	    * <p>Returns a number from <code>0</code> to <code>15</code> corresponding
-	    * to the designated hexadecimal digit.</p>
+	    * >Returns a number from 0 to 15 corresponding
+	    * to the designated hexadecimal digit.
 	    *
 	    * @param c a hexadecimal ASCII symbol.
 	    */
@@ -62,27 +72,41 @@ public class Tools {
 	         throw new IllegalArgumentException("Invalid hexadecimal digit: " + c);
 	   }
 	
+	   /**
+	    * Concatenate two byte arrays
+	    * @param one	The first byte[] array
+	    * @param two 	The second byte[] array
+	    * @returns	byte[] A concatenation of one and two
+	    */
 	public static byte[] byteAppend(byte[] one, byte[] two) {
 		byte[] tmp = new byte[one.length+two.length];
 		System.arraycopy(one, 0, tmp, 0, one.length);
 		System.arraycopy(two, 0, tmp, one.length, two.length);
 		return tmp;
 	}
-	public static byte[] byteAppend(byte one, byte two) {
-		byte[] tmp = new byte[2];
-		tmp[0] = one;
-		tmp[1] = two;
-		return tmp;
-	}
-	
+
+	/*
+	 * @see byteCopy(byte[] src, byte[] dest, int from, int length)
+	 */
 	public static void byteCopy(byte[] src, byte[] dest) {
 		byteCopy(src,dest,0, 0);
 	}
 	
+	/*
+	 * @see byteCopy(byte[] src, byte[] dest, int from, int length)
+	 */
 	public static void byteCopy(byte[] src, byte[] dest, int from) {
 		byteCopy(src,dest,from, 0);
 	}
 	
+	/**
+	 * Copy a
+	 * @param src byte[], The source
+	 * @param dest byte[], The destination
+	 * @param from int, The position to copy from
+	 * @param length int, How many bytes to copy 
+	 * @returns	Nothing, it is a constructor
+	 */
 	public static void byteCopy(byte[] src, byte[] dest, int from, int length) {
 		if(length > 0 && src.length>=length && dest.length>=length)
 			System.arraycopy(src, from, dest, 0, length);
@@ -92,7 +116,13 @@ public class Tools {
 			System.arraycopy(src, 0, dest, from, src.length);
 	}
 	
-	
+	/**
+	 * Converts an byte array of arbitrary length
+	 * into a string, used for printing purposes
+	 * 
+	 * @param in byte[] The byte array to convert
+	 * @returns	String 
+	 */
 	public static String byteArrayToString(byte[] in) {
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < in.length; i++) {

@@ -75,12 +75,12 @@ public class TLSEngine {
 				Thread.sleep(100);
 			i++;
 		}
-		le.setDetails(state.getHandshakeLog());
+		le.addDetails(state.getHandshakeLog());
 		if(handshake.isFinished()) {
-			le.setDetails("Connection successful");
+			le.addDetails("Connection successful");
 			return true;
 		}
-		le.setDetails("Connection failed");
+		le.addDetails("Connection failed");
 		return false;
 	}
 	
@@ -120,12 +120,12 @@ public class TLSEngine {
 		if(record.getContentType()==APPLICATION)
 			Log.get().add(le);
 		if(!peer.isConnected()) {
-			le.setDetails("Connection lost, reconnecting...");
+			le.addDetails("Connection lost, reconnecting...");
 			if(!peer.reconnect())
 				throw new AlertException(AlertException.alert_fatal, AlertException.close_notify,"Cannot connect");
-			le.setDetails("Connection established");
+			le.addDetails("Connection established");
 		}
-		le.setDetails("Sending data: " + Tools.byteArrayToString(record.getCiphertext()));
+		le.addDetails("Sending data: " + Tools.byteArrayToString(record.getCiphertext()));
 		peer.write(record);
 	}
 	

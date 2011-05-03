@@ -108,7 +108,7 @@ public class TLSRecord {
 		init();
 		fragment();
 		encrypt();
-		le.setDetails("Ciphertext: " + Tools.byteArrayToString(getCiphertext()));
+		le.addDetails("Ciphertext: " + Tools.byteArrayToString(getCiphertext()));
 	}
 
 	private void init() {

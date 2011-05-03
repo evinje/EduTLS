@@ -1,5 +1,12 @@
 package crypto;
 
+
+/**
+ * The cipher interface for cipher algorithms
+ * used in encryption and decryption
+ *
+ * @author 	Eivind Vinje
+ */
 public interface ICipher {
 	public int getBlockSize();
 	public byte[] encrypt(byte[] input);

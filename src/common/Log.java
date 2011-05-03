@@ -2,7 +2,11 @@ package common;
 
 import java.util.Observable;
 
-
+/*
+ * The Log class is a singleton class, used 
+ * by various other components of the project
+ * to achieve a global logging environment
+ */
 public class Log extends Observable {
 	private static volatile Log INSTANCE = null;
 	

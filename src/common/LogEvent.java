@@ -1,5 +1,13 @@
 package common;
 
+/*
+ * A LogEvent consists of a title and a description
+ * It also includes a timestamp of when the object
+ * was created.
+ * 
+ * @author 	Eivind Vinje
+ * 
+ */
 public class LogEvent {
 	public static long APP_START = System.currentTimeMillis();
 	public static String NEWLINE = System.getProperty("line.separator");
@@ -22,17 +30,33 @@ public class LogEvent {
 		this.time = Math.abs(System.currentTimeMillis() - APP_START);
 	}
 	
+	/**
+	 * @returns	String Details of the event
+	 */
 	public String getDetails() {
 		if(details.toString().length()==0)
 			return "<No details about this event>";
 		return details.toString();
 	}
 	
-	public void setDetails(String details) {
+	/**
+	 * 
+	 * @param details	Append this text to the log event details
+	 * @returns	Nothing
+	 */
+	public void addDetails(String details) {
 		this.details.append(details + NEWLINE);
 //		Tools.print("New detail update for " + title + " : " + details);
 	}
 	
+	/**
+	 * The toString method returns the time, in seconds,
+	 * between startup of the application and the time-
+	 * stamp of this log event
+	 * 
+	 * Creates a log event
+	 * @returns	String Returns the timestamp and title of the log event
+	 */
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(time/1000);

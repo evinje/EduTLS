@@ -23,7 +23,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.BevelBorder;
@@ -38,11 +37,14 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
+/**
+ * The graphical user interface
+ * of the EduTLS application
+ *
+ * @author 	Eivind Vinje
+ */
 public class EduTLS extends JFrame implements tls.IApplication, Observer {
-
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = -7578809751842248888L;
 	public long SYSTEM_START;
 		
@@ -62,7 +64,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	private ArrayList<LogEvent> logevents;
 	private JButton btnPerformance;
 	/**
-	 * 
+	 * The Constructor
 	 */
 	public EduTLS() {
 		super("EduTLS");
@@ -75,8 +77,12 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		logevents = new ArrayList<LogEvent>();
 		Log.get().addObserver(this);
 		initializeComponents();
+		initializeActionListeners();
 	}
 
+	/*
+	 * Creates the gui components
+	 */
 	private void initializeComponents() {
 		
 		Border txtBorder = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
@@ -235,11 +241,14 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 			i=i+20;
 		}
 		
-		initializeActionListeners();
 		test();
 		repaint();
 	}
 
+	/*
+	 * Adds action listeners (on click events)
+	 * to the buttons
+	 */
 	private void initializeActionListeners() {
 		btnSend.addActionListener(new ActionListener() {
 			@Override
@@ -273,7 +282,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 				LogEvent le = new LogEvent("Performance test","");
 				Log.get().add(le);
 				for(int i = 0; i < 100; i++) {
-					le.setDetails("Starting test " + i);
+					le.addDetails("Starting test " + i);
 				}
 				btnPerformance.setEnabled(true);
 			}
@@ -287,10 +296,22 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		//this.txtAddConnection.setText("192.168.10.105");
 	}
 
+	/*
+	 * Displays a simple message box
+	 * 
+	 * @param message	String, the message to me displayed
+	 * @returns	Nothing
+	 */
 	private void displayMessageBox(String message) {
 		JOptionPane.showMessageDialog(this, message);
 	}
 	
+	/*
+	 * Adds a host to the session list
+	 * 
+	 * @param host	String, the host to add
+	 * @returns	Nothing
+	 */
 	private void addConnection(String host) {
 		//modelSessions.addElement(host);
 		if(testConnection(host))
@@ -335,23 +356,23 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		return false;
 	}
 	
-	private void connectTo(String host) {
+	private void connectaTo(String host) {
 		LogEvent lo = new LogEvent("Connecting to " + host, "");
 		Log.get().add(lo);
 		PeerSocket peer;
 		try {
 			peer = new server.PeerSocket(host);
 			engine = new TLSEngine(peer, this);
-			lo.setDetails("Successful");
+			lo.addDetails("Successful");
 			
 		} catch (UnknownHostException e) {
-			lo.setDetails(e.getMessage());
+			lo.addDetails(e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			lo.setDetails(e.getMessage());
+			lo.addDetails(e.getMessage());
 			e.printStackTrace();
 		} catch (AlertException e) {
-			lo.setDetails(e.getMessage());
+			lo.addDetails(e.getMessage());
 			e.printStackTrace();
 		}
 	}

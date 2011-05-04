@@ -15,8 +15,13 @@ public class ServerHelloDone implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ServerHelloDone";
+	}
+
+	@Override
+	public String getStringValue() {
+		return "<empty message>";
 	}
 
 }

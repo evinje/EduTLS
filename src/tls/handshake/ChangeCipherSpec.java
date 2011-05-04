@@ -15,9 +15,13 @@ public class ChangeCipherSpec implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
-		// TODO Auto-generated method stub
+	public String toString() {
 		return "Change Cipher Spec";
+	}
+
+	@Override
+	public String getStringValue() {
+		return "1";
 	}
 
 }

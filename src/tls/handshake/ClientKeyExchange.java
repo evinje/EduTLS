@@ -2,6 +2,7 @@ package tls.handshake;
 
 import tls.TLSHandshake;
 
+import common.LogEvent;
 import common.Tools;
 
 import crypto.IKeyExchange;
@@ -74,8 +75,19 @@ public class ClientKeyExchange implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ClientKeyExchange";
+	}
+
+	@Override
+	public String getStringValue() {
+		if(keyExchange != null) {
+			String tmp = "Algorithm: " + keyExchange.getAlgorithm() + LogEvent.NEWLINE;
+			tmp += "Public Key: " + keyExchange.getPublicKey() + LogEvent.NEWLINE;
+			tmp += "Modulus: " + keyExchange.getPublicModulus();
+			return tmp;
+		}
+		return "Pre-master secret: " + Tools.byteArrayToString(preMasterSecret);
 	}
 
 }

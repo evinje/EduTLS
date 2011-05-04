@@ -78,7 +78,7 @@ public class TLSHandshake {
 
 	public void receive(byte[] message) throws AlertException {
 		if(message.length < HEADER_SIZE) {
-			state.addHandshakeLog("Incoming handshake message error: message too short, handshake will abort!");
+			state.addHandshakeLog(new LogEvent("Incoming handshake message error", "message too short, handshake will abort!"));
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Message too short");
 		}
 		//this.message = message;
@@ -86,7 +86,7 @@ public class TLSHandshake {
 		type = message[0];
 		int contentSize = (int)(message[1] & 0xFF)*256*256 +(int)(message[2] & 0xFF)*256 + (int)(message[3] & 0xFF);
 		if(contentSize != (message.length-HEADER_SIZE)) {
-			state.addHandshakeLog("Incoming handshake message error: wrong message size, handshake will abort!");
+			state.addHandshakeLog(new LogEvent("Incoming handshake message error","wrong message size, handshake will abort!"));
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Wrong message size: " + contentSize + " (expected " + (message.length-HEADER_SIZE) + ")");
 		}
 		content = new byte[message.length-HEADER_SIZE];
@@ -120,7 +120,7 @@ public class TLSHandshake {
 		responseQueue.remove(0);
 		
 		// Last message sent from server is the finished message.
-		state.addHandshakeLog("Sending " + tmpMessage.getString());
+		state.addHandshakeLog(new LogEvent("Sending " + tmpMessage.toString(),tmpMessage.getStringValue()));
 		if(state.getEntityType()==ConnectionEnd.Server && tmpMessage.getType()==FINISHED) {
 			isFinished=true;
 			state.addHandshakeLog("Handshake finished, chosen cipher suite: " + serverHello.getChosenCipherSuite().getName());
@@ -133,13 +133,14 @@ public class TLSHandshake {
 		switch(type) {
 		case CLIENT_HELLO:
 			// Client send ClientHello, Server respond with ServerHello
-			state.addHandshakeLog("Received: ClientHello");
+			
 			
 			if(lastMessage != HELLO_REQUEST && lastMessage != FINISHED)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected handshake message: " + lastMessage);
 			serverRandom = new byte[RANDOM_SIZE];
 			genRandom(serverRandom);
 			clientHello = new ClientHello(content);
+			state.addHandshakeLog(new LogEvent("Received ClientHello",clientHello.getStringValue()));
 			serverHello = new ServerHello(clientHello, serverRandom);
 			responseQueue.add(serverHello);
 			serverCertificate = new ServerCertificate("someNickName", serverHello);
@@ -153,29 +154,31 @@ public class TLSHandshake {
 			responseQueue.add(serverHelloDone);
 			break;
 		case CERTIFICATE_VERIFY: 
-			state.addHandshakeLog("Received: CertificateVerify");
+			state.addHandshakeLog(new LogEvent("Received CertificateVerify", "Handshake failure, not implemented"));
 			// Only used when Client Certificate is sent
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Not implemented");
 		case CLIENT_KEY_EXCHANGE:
 			// First message after ServerHelloDone
-			state.addHandshakeLog("Received: ClientKeyExchange");
+			state.addHandshakeLog(new LogEvent("Received ClientKeyExchange",Tools.byteArrayToString(content)));
 			if(lastMessage != SERVER_HELLO_DONE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			break;
 		case CHANGE_CIPHER_SPEC:
 			//Tools.printerr("CHANGE_CIPHER_SPEC SERVER");
-			state.addHandshakeLog("Received: ChangeCipherSpec");
+			state.addHandshakeLog(new LogEvent("Received ChangeCipherSpec", Tools.byteArrayToString(content)));
 			state.setChangeCipherSpecClient();
 			state.setCipherSuite(serverHello.getChosenCipherSuite());
 			break;
 		case FINISHED:
 			// Client send Finished, Server respond with [ChangeCipherSpec] and Finished
-			state.addHandshakeLog("Received: Finished");
+			
 			if(lastMessage != CHANGE_CIPHER_SPEC)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			if(!state.getChangeCipherSpecClient())
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Change cipher spec missing");
 			responseQueue.add(new ChangeCipherSpec());
+			clientFinished = new Finished(content);
+			state.addHandshakeLog(new LogEvent("Received Finished", clientFinished.getStringValue()));
 			state.setChangeCipherSpecServer();
 			serverFinished = new Finished();
 			responseQueue.add(serverFinished);
@@ -198,35 +201,36 @@ public class TLSHandshake {
 			break;
 		case SERVER_HELLO:
 			// Server send ServerHello, no response from Client.
-			state.addHandshakeLog("Received: ServerHello");
+			
 			if(lastMessage != CLIENT_HELLO)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverHello = new ServerHello(content);
+			state.addHandshakeLog(new LogEvent("Received ServerHello", serverHello.getStringValue()));
 			break;
 		case CERTIFICATE:
 			// Server send Certificate, no response from Client.
-			state.addHandshakeLog("Received: Certificate");
 			if(lastMessage != SERVER_HELLO)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverCertificate = new ServerCertificate(content);
+			state.addHandshakeLog(new LogEvent("Received Certificate", serverCertificate.getStringValue()));
 			break;
 		case SERVER_KEY_EXCHANGE:
 			// Server send ServerKeyExchange, no response from Client.
-			state.addHandshakeLog("Received: ServerKeyExchange");
 			if(lastMessage != CERTIFICATE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverKeyExchange = new ServerKeyExchange(content);
+			state.addHandshakeLog(new LogEvent("Received ServerKeyExchange",serverKeyExchange.getStringValue()));
 			break;
 		case CERTIFICATE_REQUEST:
-			state.addHandshakeLog("Received: CertificateRequest");
+			state.addHandshakeLog(new LogEvent("Received CertificateRequest","Handshake failure, not implemented"));
 			// Certificate Request is not implemented
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Not implemented");
 		case SERVER_HELLO_DONE:
 			// Server send ServerHelloDone, Client respond with [ChangeCipherSpec] and Finished.
-			state.addHandshakeLog("Received: ServerHelloDone");
 			if(lastMessage != SERVER_KEY_EXCHANGE && lastMessage != CERTIFICATE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverHelloDone = new ServerHelloDone();
+			state.addHandshakeLog(new LogEvent("Received ServerHelloDone",serverHelloDone.getStringValue()));
 			if(serverHello.getChosenCipherSuite().getKeyExchange().requireServerKeyExchange())
 				clientKeyExchange = new ClientKeyExchange(serverHello.getChosenCipherSuite().getKeyExchange());
 			else {
@@ -242,18 +246,18 @@ public class TLSHandshake {
 			responseQueue.add(clientFinished);
 			break;
 		case CHANGE_CIPHER_SPEC:
-			//Tools.printerr("CHANGE_CIPHER_SPEC CLIENT");
-			state.addHandshakeLog("Received: ChangeCipherSpec");
+			state.addHandshakeLog(new LogEvent("Received ChangeCipherSpec", Tools.byteArrayToString(content)));
 			state.setChangeCipherSpecServer();
 			break;
 		case FINISHED:
 			// Client send Finished, Server respond with [ChangeCipherSpec] and Finished
-			state.addHandshakeLog("Received: Finished");
 			if(lastMessage != CHANGE_CIPHER_SPEC)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			if(!state.getChangeCipherSpecServer())
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Missing change cipher spec");
+			serverFinished = new Finished(content);
 			isFinished=true;
+			state.addHandshakeLog(new LogEvent("Received Finished", serverFinished.getStringValue()));
 			state.addHandshakeLog("Handshake finished, chosen cipher suite: " + serverHello.getChosenCipherSuite().getName());
 			break;
 		default:

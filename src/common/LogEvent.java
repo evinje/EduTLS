@@ -1,5 +1,7 @@
 package common;
 
+import java.util.ArrayList;
+
 /*
  * A LogEvent consists of a title and a description
  * It also includes a timestamp of when the object
@@ -12,6 +14,7 @@ public class LogEvent {
 	public static long APP_START = System.currentTimeMillis();
 	public static String NEWLINE = System.getProperty("line.separator");
 	private String title;
+	private ArrayList<LogEvent> subLogEvents;
 	private StringBuilder details;
 	private double time;
 	
@@ -22,6 +25,7 @@ public class LogEvent {
 	 * @returns	Nothing, it is a constructor
 	 */
 	public LogEvent(String title, String details) {
+		subLogEvents = new ArrayList<LogEvent>();
 		this.title = title;
 		if(details.length()>0)
 			this.details = new StringBuilder(details + NEWLINE);
@@ -45,8 +49,27 @@ public class LogEvent {
 	 * @returns	Nothing
 	 */
 	public void addDetails(String details) {
-		this.details.append(details + NEWLINE);
-//		Tools.print("New detail update for " + title + " : " + details);
+		addDetails(details, false);
+	}
+	
+	public void addDetails(String details, boolean includeTimeStamp) {
+		if(includeTimeStamp) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(Math.abs((System.currentTimeMillis()-time)/1000));
+			while(sb.length() < 8)
+				sb.insert(0," ");
+			this.details.append("[" + sb.toString() + "] " + details + NEWLINE);
+		}
+		else
+			this.details.append(details + NEWLINE);
+	}
+	
+	public void addLogEvent(LogEvent child) {
+		subLogEvents.add(child);
+	}
+	
+	public ArrayList<LogEvent> getSubLogEvents() {
+		return subLogEvents;
 	}
 	
 	/**

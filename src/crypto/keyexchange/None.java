@@ -61,4 +61,9 @@ public class None implements crypto.IKeyExchange {
 	public BigInteger getServerKeyExchangeMessage() {
 		return null;
 	}
+
+	@Override
+	public BigInteger getSecretKey() {
+		return null;
+	}
 }

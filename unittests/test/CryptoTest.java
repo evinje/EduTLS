@@ -1,18 +1,13 @@
 package test;
 
 import java.io.UnsupportedEncodingException;
-import java.security.InvalidAlgorithmParameterException;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import junit.framework.TestCase;
 
@@ -20,19 +15,7 @@ import common.Tools;
 
 public class CryptoTest extends TestCase {
 
-	public void testSha() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-		/*	
-		 *
-		 * byte[] seq = new byte[2];
-			if(sequenceNumber<256) {
-				seq[0] = 0;
-			seq[1] = (byte)sequenceNumber;
-		}
-		else {
-			seq[0] = (byte)Math.ceil(sequenceNumber/256);
-			seq[1] = (byte)(sequenceNumber%256);
-		}
-		 */
+	public void testSha1() throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
 		// TEST SHA-1
 		crypto.mac.SHA1 sha1 = new crypto.mac.SHA1();
@@ -43,8 +26,12 @@ public class CryptoTest extends TestCase {
 		assertEquals(Tools.toHexString(result),"A9993E364706816ABA3E25717850C26C9CD0D89D");
 		result = sha1.getMac("abcdefghijklmnopqrstuvwxyz".getBytes("UTF-8"));
 		assertEquals(Tools.toHexString(result),"32D10C7B8CF96570CA04CE37F2A19D84240D3A89");
-
+		
+	}
+	
+	public void testSha256() throws UnsupportedEncodingException {
 		// TEST SHA-256
+		byte[] result;
 		crypto.mac.SHA256 sha256 = new crypto.mac.SHA256();
 		assertEquals(sha256.getSize(), 256);
 		result = sha256.getMac("".getBytes("UTF-8"));
@@ -103,6 +90,19 @@ public class CryptoTest extends TestCase {
 	}
 	
 	public void testDH() throws Exception {
-		crypto.keyexchange.DH dh = new crypto.keyexchange.DH(512);
+		crypto.keyexchange.DH dhA = new crypto.keyexchange.DH(512);
+		crypto.keyexchange.DH dhB = new crypto.keyexchange.DH(512);
+		
+		assertEquals(dhA.requireServerKeyExchange(),true);
+		assertEquals(dhB.requireServerKeyExchange(),true);
+		
+		dhA.setYb(dhB.getPublicKey());
+		dhB.setYb(dhA.getPublicKey());
+		
+		BigInteger secretA = dhA.getSecretKey();
+		BigInteger secretB = dhB.getSecretKey();
+		
+		assertEquals(secretA.toString(), secretB.toString());
+		
 	}
 }

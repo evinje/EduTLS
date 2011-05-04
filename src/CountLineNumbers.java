@@ -53,7 +53,9 @@ public class CountLineNumbers {
 		}else if (fileObject.isFile()){
 			int line=getLineNumbers(fileObject);
 			totalNumber += line;
-			System.out.println(fileObject.getName() + ": " + line);
+			String packageName = fileObject.getParent();
+			packageName = packageName.substring(packageName.lastIndexOf("\\")+1);
+			System.out.println(packageName + " " + fileObject.getName().substring(0,fileObject.getName().indexOf(".")) + ": " + line);
 
 		}		
 	}
@@ -67,10 +69,12 @@ public class CountLineNumbers {
 			e.printStackTrace();
 			return 0;
 		}
-		
+		String in;
 		while (input.hasNextLine()) {
-			input.nextLine();
-			count++;
+			in = input.nextLine();
+			in = in.trim();
+			if(!in.equals("") && !in.startsWith("/") && !in.startsWith("*"))
+				count++;
 		}
 		return count;
 	}

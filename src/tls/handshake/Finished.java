@@ -7,6 +7,9 @@ public class Finished implements IHandshakeMessage {
 	public Finished() {
 		
 	}
+	public Finished(byte[] value) {
+		// TODO: fix this
+	}
 	
 	@Override
 	public byte[] getByte() {
@@ -20,8 +23,12 @@ public class Finished implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "Finished";
+	}
+	
+	public String getStringValue() {
+		return "not implemented";
 	}
 	
 }

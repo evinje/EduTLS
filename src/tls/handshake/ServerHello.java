@@ -7,6 +7,7 @@ import tls.CipherSuite;
 import tls.TLSEngine;
 import tls.TLSHandshake;
 
+import common.LogEvent;
 import common.Tools;
 
 public class ServerHello implements IHandshakeMessage {
@@ -85,7 +86,16 @@ public class ServerHello implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ServerHello";
+	}
+	
+	@Override
+	public String getStringValue() {
+		String tmp = "Server Random: " + Tools.byteArrayToString(serverRandom) + LogEvent.NEWLINE;
+		tmp += "Session ID: " + Tools.byteArrayToString(sessionId) + LogEvent.NEWLINE;
+		tmp += "Compression method: None" + LogEvent.NEWLINE;
+		tmp += "Chosen Cipher Suite: " + chosenCipherSuite.getName();
+		return tmp;
 	}
 }

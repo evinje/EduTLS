@@ -1,10 +1,10 @@
 %\documentclass[pdftex,10pt,b5paper,twoside]{book}
-\documentclass[12pt,b5paper,titlepage]{report}
-\usepackage[lmargin=25mm,rmargin=25mm,tmargin=27mm,bmargin=30mm]{geometry}
+\documentclass[12pt,a4paper,titlepage]{report}
+%\usepackage[lmargin=25mm,rmargin=25mm,tmargin=27mm,bmargin=30mm]{geometry}
 
 \usepackage{listings}
 \usepackage{float}
-\usepackage[Glenn]{fncychap}
+\usepackage[Bjornstrup]{fncychap}
 \usepackage{fancyhdr}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{parskip}
@@ -51,7 +51,7 @@ FACULTY OF  INFORMATION TECHNOLOGY, MATHEMATICS AND ELECTRICAL ENGINEERING} \\
 {\huge \bfseries Educational implementation of SSL/TLS}\\[0.4cm] 
 \rule{\linewidth}{0.5mm} \\[3.5cm]
 \textsc{\Large Eivind Vinje}\\[1.4cm]
-\textsc{\Large December 2010}\\
+\textsc{\Large June 2011}\\
 \end{center}
 \end{titlepage}
 
@@ -64,26 +64,26 @@ FACULTY OF  INFORMATION TECHNOLOGY, MATHEMATICS AND ELECTRICAL ENGINEERING} \\
 \includegraphics[scale=0.5]{img/NTNU-logo} \\
 
 \vspace{1.0cm}
-{\Huge{PROJECT ASSIGNMENT}}
+{\Huge{PROBLEM DESCRIPTION}}
 \vspace{1.0cm}
 
 \begin{tabular}{ p{4cm} p{11cm}}
 Student's name:	& Eivind Vinje \\
-Course: & TTM4531 Information Security, Specialization Project \\
+Course: & TDT4900 Master's Thesis \\
 Title: & Educational implementation of SSL/TLS \\
 %\vspace{1cm}
 Description: & \\
 \end{tabular}
 {\small{\begin{tabular}{p{15cm}}
 \vspace{0.2cm}
-SSL/TLS is the most common and widely used secure protocol in Internet. It is a package of more than 30 cryptographic primitives and protocols. For students studying information security it is of a crucial importance to have a good understanding of how the different parts are working. The aim of the project will be to develop an educational implementation of SSL/TLS that could be used when teaching information security. The basic idea is to create a simple protocol that encrypts communication between two hosts, implemented in Java, where versions of DH, RSA, AES and SHA-1 are designed and implemented accompanied by a graphical interface that will monitor what is happening in every moment of the work of the algorithm (protocol).
+SSL/TLS is the most common and widely used secure protocol in Internet. It is a package of more than 30 cryptographic primitives and protocols. For students studying information security it is of a crucial importance to have a good understanding of how the different parts are working. The aim of the project will be to develop an educational implementation of SSL/TLS that could be used when teaching information security. The basic idea is to create a simple protocol that encrypts communication between two hosts, implemented in Java. The protocol should include implementations of DH, RSA, AES and SHA-1 accompanied by a graphical interface that will monitor what is happening in every moment of the work of the algorithm (protocol). The graphical user interface should also include statistics on how time consuming each operation has been.
 \end{tabular}  }}
 
 \begin{tabular}{ p{4cm} p{11cm}}
-Deadline: & 2010-12-20 \\
-Submission date: & 2010-12-16 \\
-Department: & Department of Telematics \\
-Supervisor: & Prof. Danilo Gligoroski\\\\
+Deadline: & June 10, 2011 \\
+Submission date: & \today \\
+Department: & Department of Computer and Information Science \\
+Supervisor: & Prof. Danilo Gligoroski, Department of Informatics\\\\
 \end{tabular}
 \vspace{0.5cm}
 
@@ -94,3 +94,537 @@ Trondheim, \today
 Danilo Gligoroski
 \addcontentsline{toc}{chapter}{Problem Description}
 \end{center}
+
+
+\begin{abstract}
+\setcounter{page}{2}
+\addcontentsline{toc}{chapter}{Abstract}
+The Transport Layer Security (TLS) protocol provides secure communication over an untrusted network, such as the Internet. TLS was published as an Internet standard in 1999, closely related to the Secure Socket Layer (SSL) version 3. Today, it is the \textit{de facto} standard for secure end-to-end communication. By combining various cryptographic primitives, TLS provides authentication, confidentiality, integrity, and message forgery detection. The goal when designing the protocol was to create a standard solution for secure communication, that was flexible, robust, fast, and easy to implement. TLS has been widely analyzed, resulting in continuous improvement of the protocol and documentation. This report gives a detailed description of the TLS protocol, and explains why and how it is claimed to be secure. In addition, the report presents the background theory required to understand TLS, such as cryptographic primitives.
+
+In this thesis, we implement a tool 
+This project proposes a tool, called EduSSL, which can be used when studying information security. The tool is an application developed in Java, which has its own implementation of a SSL/TLS similar protocol. The implementation is not compatible with SSL/TLS, but has the same structure and architecture. The most complex part of TLS is the Handshake protocol, therefore the application has extra focus on this part. The intention with EduSSL is to offer a practical approach when studying the protocol. EduSSL includes implementation of several cryptographic primitives, hence it might also be useful when gaining experience in cryptanalysis. 
+
+\end{abstract}
+
+\setcounter{page}{3}
+\section*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+Continuation on the specializing project...
+
+This report reflects the work from a term project in information security at the Norwegian University of Science and Technology, Department of Telematics. The aim of this project is to \emph{acquire specialized knowledge in a selected theme or problem within the field of information security}. I chose the SSL/TLS protocol as the theme, because I wanted to learn more about the protocol and how the different parts cooperate. 
+
+This report and the proposed tool is mainly directed towards information security students at the university level, who already have good understanding of how computers operate and communicate. To reach out to a broader specter, the theory chapter should provide enough background knowledge that non-security persons can benefit from the project as well.
+
+The project source code has about 3000 lines of code, which would result in 60 pages of text, hence it is not included as an appendix. The complete source code is available on the attached CD. However, the most vital parts of the source code are included in this report. Appendix \ref{appendix:compile} lists the commands required to compile and execute the application.
+
+I wish to thank my supervisor Professor Danilo Gligoroski at the Department of Telematics, Norwegian University of Science and Technology, for his assistance in the project. When I proposed the theme, he was positive and enthusiastic, and gave good advice regarding how the project could be accomplished.
+
+Special thanks are given to Ingrid Strømsheim, who kindly helped proofreading this paper and provided valuable feedback.
+
+\tableofcontents
+%\thispagestyle{empty}
+\listoffigures
+%\thispagestyle{empty}
+\listoftables
+%\thispagestyle{empty}
+
+\newpage
+\begin{acronym}
+\section*{List of Acronyms}
+\addcontentsline{toc}{chapter}{List of Acronyms}
+\acro{AES} {Advanced Encryption Standard}
+\acro{ARPANET} {Advanced Research Projects Agency Network}
+\acro{ASCII} {American Standard Code for Information Interchange}
+\acro{AWT} {Abstract Window Toolkit}
+\acro{DNS} {Domain Name System}
+\acro{GUI} {Graphical User Interface}
+\acro{HTTP} {Hypertext Transfer Protocol}
+\acro{HTTPS} {Hypertext Transfer Protocol Secure}
+\acro{IETF} {Internet Engineering Task Force}
+\acro{IP} {Internet Protocol}
+\acro{NTNU} {Norwegian University of Science and Technology}
+\acro{OSI} {Open Systems Interconnection}
+\acro{PKI} {Public Key Infrastructure}
+\acro{PRF} {PseudoRandom Function}
+\acro{RFC} {Request For Comments}
+\acro{RSA} {Rivest, Shamir and Adleman}
+\acro{SHA} {Secure Hash Algorithm}
+\acro{SSL} {Secure Socket Layer}
+\acro{TCP} {Transmission Control Protocol}
+\acro{TLS} {Transport Layer Security} 
+\acro{W3C} {World Wide Web Consortium}
+\end{acronym}
+
+\newpage
+\begin{description}
+\section*{Definitions}
+\addcontentsline{toc}{chapter}{Definitions}
+\item[Authentication] {Assurance that the other peer is who it claims to be.}
+\item[Algorithm] {A set of rules that specifies how to solve certain a problem.}
+\item[Cipher] {An algorithm performing either encryption or decryption.}
+\item[Confidentiality] {Protection of information against passive attacks, such as eavesdropping.}
+\item[Cryptographic primitive] {A cryptographic algorithm, such as hash function, encryption function.}
+\item[Digital certificate] {An electronic document that combines an identity with a public key.}
+\item[Eavesdropping] {The act of listening to a private conversation without their knowledge and consent.}
+\item[Host] {A computer connected to a network.}
+\item[IEFT] {An open community that develop Internet standards.}
+\item[Integrity] {Protection of information against active attacks, such as tampering.}
+\item[Message forgery] {A message sent to deceive the recipient as to whom the real sender is.}
+\item[Node] {An electronic device attached to the network, such as a router.}
+\item[Nonce] {A random number that is never reused (number used once).}
+\item[OSI model] {A standard segmentation of the network protocol into layers.}
+\item[Protocol] {A standard, defining a set of rules that determines how data is represented when transmitted over a network connection.}
+\item[Public Key Infrastructure] {The technical and organizational infrastructure in charge of issuing, distributing, and revoking digital certificates.}
+\item[Socket] {A "communication road" between two processes on different hosts.}
+\item[W3C] {Word Wide Web Consortium: An international community that develop Web standards.}
+\item[XOR] {A operation that takes two bit patterns and performs a logical XOR operation \\ \textit{(1 XOR 1 = 0, 1 XOR 0 = 1, 0 XOR 1 = 1, 0 XOR 0 = 0)}}
+\item[X.509] {A PKI standard}
+\end{description}
+
+\textit{Note that these definitions are according their role in this report, a more general definition may be more appropriate in other situations.}
+
+\newpage
+\pagenumbering{arabic}
+\chapter{Introduction}
+\pagestyle{fancy}
+\setcounter{page}{1} %specifies that this is page 1
+
+Use the code! Github. Uses TLSv1.2. Sokme of the theoretical section (background chapter) is cited from EduSSL project.
+
+Internet was not designed to be secure; the focus was robustness and scalability. In general, all packets sent over a network connection, such as the Internet, can be eavesdropped, tampered, or forged. Netscape Communications was one of the companies that responded to the need for secure network communication, and developed the first version of the Secure Socket Layer (SSL) protocol in 1994. After the success of SSL, it was adopted as an Internet standard by the IETF in 1999 and called Transport Layer Security (TLS). Today, SSL and TLS are the predominant protocols for secure network communication. \cite{berbecaru} 
+
+Secure Socket Layer (SSL) is a protocol providing end-to-end secure communication. When designing SSL, the goal was a flexible solution where any application could benefit its service. With that in mind, SSL was not incorporated into the Netscape browser, but located at the layer between the browser and the transport layer. From the developer's view, the only modification needed when utilizing SSL was to communicate to the SSL protocol instead of the TCP protocol. This was the thought; to give the developer a unified and simple solution to implement into their applications. The protocol, as the name implies, operates at the socket layer and transports application data from the higher layer protocols, without reflecting about its content. It is intended to use in a client-server model. SSL by itself is useless, but protocols at the application layer, for instance HTTP for web browsing, can benefit the facilities of SSL.
+
+SSL is the far most popular cryptographic system. Cryptographic systems use cryptographic primitives as building blocks, creating a package that exploits the advantages of each primitive and combines them to cooperate. When studying information security, the focus is often to learn how the cryptographic primitives work, its advantages and disadvantages. This is undoubtedly important, but the primitives by itself are not secure. For instance, encryption does not provide authentication or integrity checking. When looking at a cryptographic system in addition, one might get a better overview of how the algorithms can be combined to create the best security possible for a particular situation. \cite{wikiCryptosystem,wikiCryptoPrimitive}
+
+The rest of this report will refer to TLS instead of SSL, but most parts of the protocols are identical.
+
+The report is organized as follows: Section \ref{sec:history} gives a brief overview of the history of Internet and TLS to emphasize why things are the way they are, Section \ref{sec:theory} presents the theoretical background required to understand TLS, Section \ref{sec:implementation} describes the implementation of EduSSL, Section \ref{sec:discussion} provides a discussion and proposal for future improvements, and Section \ref{sec:conclusion} contains the conclusion of this project.
+
+\section{Motivation}
+When choosing a topic for the specializing project, I wanted to create something practical in addition to learning the theory. After a brainstorming session, I came up with the idea of creating an educational implementation of SSL. This satisfied both the practical aspect and to specialize within an important topic. SSL has been around for over 16 years and gets more popular every day.
+
+The spring semester of this year I attended the course \emph{TTM4135 Information Security}. The curriculum for this course was several topics within information security, mostly cryptographic primitives. Each topic had a theory part, its range of application, advantages and disadvantages.  SSL combines several of these cryptographic primitives in one package, but in my experience, it was difficult to understand how the different parts work together. 
+My aim is to learn and understand what is going on behind the scenes, and to create an application that can help other people with the same. The application should have the same architecture and principles as SSL, but at the same time be a simplified and more compact version. The intention is not to create yet another SSL implementation, but an educational implementation. 
+
+\section{Methodology}
+\label{sec:methodology}
+At the beginning of the project, I performed a literature study. This mostly included reading from articles I found at Springerlink\footnote{www.springerlink.com}, DAIM\footnote{http://daim.idi.ntnu.no/soek/index.php}, Wikipedia\footnote{en.wikipedia.org}, Google Scholar\footnote{scholar.google.com}, and in the book Cryptography and Network Security (4th edition) by William Stallings. From these articles, I acquired a good overview of the protocol, its history and how it has evolved, and many analyses of the protocol. The TLS specification defined in the RFC document has also been very helpful. The literature study was, of course, conducted throughout the whole project. What I felt was missing, was the more detailed information; for instance how a raw handshake message looked like when it was transmitted over the network. To achieve this, I used a tool called Wireshark, which is a network packet sniffer, and connected to various HTTS enabled web sites with my browser. With this tool, I saw the content of the messages exchanged during the TLS handshake. Wireshark is not a part of this project, and has not been included, but the knowledge and experience was valuable for me. Additionally, I searched for open source SSL/TLS implementation written in Java, and found a project called Jessie\cite{jessie}. The project did not compile on my computer, but I studied some parts of the source code in details.
+
+EduSSL is developed in a Java. Java is an object-oriented programming language, released in 1995 by Sun Microsystems. The syntax is inspired by the popular programming languages C and C++, but has a simpler object model. It is widely used and taught at many universities, including NTNU. There are many advantages when choosing Java as the programming language. For this project, the vital ones are its cross-platform capability\footnote{It can be used in all the major operating systems, like Windows, Linux and Mac}, the diversity of discussion forums and on-line documentation, and the single most important one; when creating an application that can be used when teaching, the selected programming language must be known by the students. The fact that Java is a high-level language is another good argument for choosing it as the programming language in this project. When one uses the SSL/TLS capabilities in Java, the usage is almost identical to regular socket communication. For the developer, this can often result in a situation where he \emph{know how to use it, but do not understand how it works}. Security is more than just using strong keys and well-tested cryptographic algorithms, it is an aspect that must be considered during the whole process, and the implementation must be done with care. \cite{gosling}
+
+\section{Delimitations}
+
+The scope of this report is not to discuss how security should be considered during a development project, but to emphasize the importance of using the technology as it is intended to be used. Correct use is often related to understanding, and the goal of this report is to give a good understanding of SSL/TLS. It is not intended to explain how a native SSL/TLS implementation is accomplished, this can be found in several other projects, see Section \ref{sec:relatedwork}. 
+
+Even though some weaknesses in the SSL protocol are mentioned, this report does not include a thorough analysis of its security, and does not explain the weaknesses in detail. The mentioned weaknesses are from previous versions of the protocol, and have been included to explain how the protocol has evolved to become more secure.
+
+In the EduSSL implementation, security is not the main issue, but rather the principles and simplicity to make it easier to understand SSL/TLS. The application cannot be used to communicate with other SSL/TLS enabled applications, and may contain several vulnerabilities. It should be used only for research and educational purposes.
+
+\section{Outline}
+
+\newpage
+\chapter{History}
+\label{sec:history}
+This section begins with the history of Internet, to give an understanding of how it has evolved and why it is not secure. This is succeeded by the history of SSL, and the creation of an Internet draft document, which resulted in the standardization of the protocol TLS.
+
+During the Cold War in the 1960s, the US Department of Defense (DoD) created a research project called ARPANET. The goal of this project was to create a reliable and decentralized network to share information between the DoD, the military, and universities that ran research for them. ARPANET was designed to continue to operate even if one or more of the nodes failed or disconnected. The ARPANET users comprised a small group of people who generally knew and trusted each other, and of that reason, the concerns were openness and flexibility, not security. In the following decade, other universities and research organizations were connected to the network. As several other networks merged together with ARPANET, it formed a global worldwide network that we today call the Internet. In the 1980s, ARPANET was no longer a defense product, and the commercial Internet Service Providers offered access to the network. Many different projects attempted to create ways to organize the distributed data, for example electronic mail in the 1970s and World Wide Web in the 1990s. Common to them was that security was not considered. \cite{sim97, weinstein05}
+
+Netscape Communications was one of the companies that responded to the need for secure network communication, and developed the Secure Socket Layer (SSL) protocol in 1994. Originally, SSL secured the communication between Netscape's web browser and server, but the specification stated that the protocol could be used with other applications as well. Version 1 of SSL was never publicly released, but gained a lot of attention, and the year after Netscape released version 2 of the protocol. The protocol was thoroughly analyzed and many weaknesses were detected. Version 3 aimed to fix the weaknesses and drawbacks, which resulted in a heavily modified protocol, released the year after. \cite{ibmssl,sansinstitute,morrissey}
+
+At the same time, there were other companies trying to create their own security solutions. Instead of having several solutions to the same problem, Microsoft and Netscape requested the Internet Engineering Task Force (IETF) to define a standard protocol. The IETF is an open community that develops standards, mostly concerning the technical evolution of the Internet. IETF cooperates with the W3C organization, and together they, among other things, create Internet standards and recommendations. The IETF community is mostly known for its Request For Comments (RFC) documents. An RFC is the official publication channel of a standardization proposal, where a number of rounds of peer reviews are carried through, and may result in an Internet Standard (STD). In 1999, IETF published the first proposal for a new standard; RFC2246\footnote{Each RFC is assigned a unique number, for TLS version 1.0, it is 2246}. IETF based this standard mainly on the Secure Socket Layer protocol version 3, but in addition, they considered input from several other vendors. The result was the Transport Layer Security (TLS) protocol version 1.0. The RFC states that 
+\begin{quote}
+the differences between this protocol and SSL 3.0 are not dramatic, but they are significant enough that TLS 1.0 and SSL 3.0 do not interoperate.
+\end{quote}
+The most important differences are the pseudorandom function, the MAC schemes, alert codes, supported and mandatory cipher suites, and the calculation of master secret. These are explained in Section \ref{sec:theory:tls}. \cite{rfc5246,sansinstitute,morrissey}
+
+After seven years, RFC4346 was released, with the definition of TLS version 1.1. The difference between version 1.0 and 1.1 are not significant, but protection against the discovered attacks was added, and support for new cryptographic algorithms was defined. The fact that TLS version 1.0 was not upgraded for seven years, confirmed how good the protocol was designed, considering the explosion of its popularity. In 2008, TLS version 1.2 was defined. This version is currently the latest release. The most important improvements are discussed later in this chapter.\cite{berbecaru,sim97,weinstein05,rfc2246,rfc4346,rfc5246}
+
+\newpage
+\chapter{Background}
+
+This chapter will give the reader the necessary theoretical background for the
+main subjects of this thesis: 
+Move history under background.
+
+\label{sec:theory}
+This section introduces the most important cryptographic primitives, public key infrastructure, and finally explains the TLS protocol.
+
+\section{Cryptography}
+To understand how TLS works, basic knowledge of cryptography is required. Cryptography is a subfield within cryptology. According to William Stallings\cite{stallings}, 
+\begin{quote}
+cryptology is the study of techniques for ensuring the secrecy and/or authenticity of information.
+\end{quote}
+Cryptanalysis is another subfield within cryptology. Cryptography is the study of how to design functions, whereas cryptanalysis tries to find vulnerabilities in the design. Cryptanalysis is beyond the scope of this report.
+
+The topics in cryptography relevant to this project are cryptographic algorithms, hash functions and digital signatures. Cryptographic algorithms are divided into two categories; conventional encryption and public-key encryption. Encryption is the process of converting readable information into something that is not understandable without knowing a secret piece of information, usually called a key. A hash function is a procedure that transforms an arbitrary-sized piece of information into a fixed-length code. 
+
+\subsection{Conventional Encryption}
+In conventional encryption, or symmetric conventional encryption, both the encryption and decryption are performed using the same key. The involved parties, the sender and the receiver, must share a secret key that is known only to them. Encryption and decryption are performed by using an algorithm, called a cipher. The encryption and decryption cipher may be identical, but that is not always the case\footnote{In the AES cipher, the encryption and decryption cipher is different, whereas in the DES cipher, they are identical}. In addition to sharing a secret key, both parties must know which cipher they will be using. The cipher does not need to be kept secret; it is the key that protects the message. When encryption is performed, the cipher takes a message, called plaintext, and the key, and transforms it to an encrypted message. The encrypted message is referred to as the ciphertext. To recover the plaintext, the decryption cipher is used. By giving the decryption cipher the same key and the ciphertext, it is transformed back to the original plaintext. \cite{stallings}
+
+Conventional encryption has existed for over 2000 years. One of the first, and maybe the most known, is the Caesar cipher. In the Caesar cipher, each letter in the message is replaced with the letter located three positions later in the alphabet. This means that A becomes D, D becomes G and Z becomes C. The key in this cipher is the knowledge of swapping each letter with the one located three positions later. 
+
+Most of today's conventional encryption ciphers use a combination of substitution and permutation. In substitution, each unit is replaced with another unit. The substitution can be a lookup from a predefined table or according to an algorithm. It is important though, that the process can be reversed, and that no replacement is ambiguous. Permutation is a method where the units are reordered. All the units will remain, but the position has changed. The conventional cipher used in TLS is either a stream cipher or a block cipher\footnote{Several other types exist, such as monoalphabetic, polyalphabetic, and steganographic}. A block cipher converts a fixed-size block of plaintext into ciphertext, whereas a stream cipher combines the plaintext with a key stream and typically XOR these two, one units at a time.
+
+Conventional encryption has the benefit of being very fast, but has the major disadvantage of key distribution; the parties must have exchanged the secret key in advance. 
+
+The most widely used conventional encryption algorithms are Data Encryption Standard (DES) and Advanced Encryption Standard (AES). The AES algorithm is originally called Rijandel, but it is mostly referred to as the AES algorithm since Rijandel won the competition of becoming the next standard conventional encryption algorithm.
+
+\subsubsection{Advanced Encryption Standard}
+Not necessary to read, but has been included for the ones who want a deeper insight in the protocol.
+
+\subsection{Public-Key Encryption}
+In public-key encryption, or asymmetric encryption, encryption and decryption are performed with different keys. Instead of sharing a single secret key, a key pair is used, where one key is public and the other is private. The encryption and decryption algorithms are identical, but when the public key is used to encrypt the data, only the corresponding private key can be used when performing the decryption. If the private key is used in the encryption, only the corresponding public key can be used in the decryption. 
+
+The key pair has mathematical properties and the algorithms for encryption and decryption are mathematical functions. These functions often include a combination of exponential and modulus computation. When having only one of the keys, it is impossible\footnote{Impossible in this context means computational infeasible} to discover the paired key. 
+
+The first published algorithm for this encryption scheme was in the late 1970s. This revolutionized how cryptographic systems could be designed. It was no longer required for the parties to share a secret key, the sender could use the public key of the receiver to encrypt the message before sending it; and the receiver used its corresponding private key to decrypt the message. Public-key encryption is, however, not the solution to every problem. Compared to conventional encryption, this scheme involves very time-consuming computation, making it unpractical when encrypting large amounts of information. A 128-bit key in conventional encryption has equal computational security as a 3072-bit key in public-key encryption. According to several resources\cite{pgp,javabeat,crashcourse}, conventional encryption is about 1000 times faster than public-key encryption. Hence, the public-key encryption is most often used to distribute symmetric keys. \cite{stallings,nistrecommendation}
+
+The most used, and first released, public-key encryption algorithm is RSA.
+
+\subsubsection{RSA}
+
+\subsubsection{DH}
+
+
+\subsection{Hash Function}
+A hash function, one-way function, or message digest function, is a procedure, which takes a variable length input and compresses it to a fixed size output. This means a single character will produce an equal size output as a large document. The output is referred to as a hash value, checksum or fingerprint. Hash functions are commonly used to compare values. It can, for instance, ensure that a message has not been tampered with, by comparing the original hash value with the current hash value. 
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.3]{img/hash}
+\label{Hash function structure}
+\caption{Hash function structure}
+\end{center}
+\end{figure}
+The figure above illustrates the typical structure of a hash function. F denotes a compression function, which takes a fixed-size input and turns it into a shorter, fixed-size output. The compression function is repeated a number of times until the whole message has been processed. The initial value is specific for each algorithm.
+
+A cryptographic hash function should satisfy the following properties:\cite{stallings, wikiHash}
+\begin{description}
+\item[Easy to compute] { For any given input \emph{x} it is easy to compute the hash value \emph{h} }
+\item[Preimage resistance] { For any given hash value \emph{h} it is infeasible to find a corresponding input \emph{x} }
+\item[Second preimage resistance] { For any given message \emph{x} it is infeasible to find another message \emph{y} such as \emph{H(x)=H(y)} and \emph{x $\neq$ y} }
+\item[Collision resistance] { It is infeasible to find two different messages \emph{x} and \emph{y} such as \emph{H(x)=H(y)} and \emph{x $\neq$ y} }
+\end{description}
+The hash function is noted as \emph{H}, input message \emph{x} and the resulting hash value \emph{h}; \emph{H(x)=h}. 
+
+\section{Public Key Infrastructure}
+Public Key Infrastructure (PKI) is a technical and organizational infrastructure in charge of issuing, distributing, and revoking digital certificates. The practical means of implementing PKI is to provide mechanisms to ensure that trusted relationships are established and maintained. To TLS, this is authentication scheme provides trust between the public key and its owner. This authentication is based on a trusted third party, called a Certificate Authority (CA), which, after verifying the identity, creates a signature of the digital certificate. This signature is simply a hash of the certificate that is encrypted with the CA's private key, and attached to the certificate. There is no predefined list of Certificate Authorities; this is up to each system to provide. \cite{stallings, europki}
+
+A PKI consists of several entities/elements:
+\begin{description}
+\item[End user] { The entity that consumes the PKI service or an entity that can be identified in a digital certificate }
+\item[Certification Authority] { A trusted third party (an organization) which creates and sign certificates. It is usually formed in a hierarchy, and the digital certificate may have a chain of several Certificate Authorities in the signature }
+\item[Registration Authority] { An optional entity, which can be delegated a number of administrative tasks by the Certificate Authority }
+\item[Revocation Authority] { An optional entity, which can be delegated to publish Certificate Revocation Lists by the Certificate Authority }
+\end{description}
+% 
+
+
+\subsection{Digital Certificate}
+\label{sec:certificate}
+A digital certificate is an electronic document, which combines an identity with a public key. The digital certificate is sometimes referred to as a public-key certificate. A certificate has a data structure, where the X.509 format is the most common. 
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.7]{img/x509}
+\caption{X.509 certificate structure}
+\end{center}
+\end{figure}
+
+The X.509 certificate includes the following elements:\cite{stallings, msx509, msdc}
+
+\begin{description}
+\item[Version] {The X.509 version which the certificate conforms. }
+\item[Certificate Serial Number] {A unique certificate identifier within the issuing Certificate Authority. }
+\item[Certificate Algorithm Identifier] {The algorithm used to sign the certificate. }
+\item[Issuer] {The name of the Certificate Authority who issued the certificate. }
+\item[Validity period] {The period of time where the certificate is valid. It contains both a start date and an expiration date. }
+\item[Subject] {The name of the entity the certificate belongs to. }
+\item[Subject Public-Key Information] {The public key belonging to the entity of the Subject and the algorithm associated with the public key.  }
+\item[Issuer Unique Identifier] {Information that can be used to uniquely identify the issuer of the digital certificate. }
+\item[Subject Unique Identifier] {Information that can be used to uniquely identify the owner of the digital certificate.}
+\item[Extensions] {Additional information that is related to the use and handling of the certificate.}
+\item[Certificate Authority Digital Signature] {Consists of a hash value of the certificate encrypted with the Certificate Authority's private key.}
+\end{description}
+
+There are currently three versions of the X.509 certificate. The \emph{Issuer Unique Identifier} and \emph{Subject Unique Identifier} were added in version 2 and \emph{Extensions} in version 3.
+
+
+\section{Transport Layer Security}
+\label{sec:theory:tls}
+The Transport Layer Security (TLS) protocol offers secure communication over an untrusted network connection; it provides authentication, confidentiality, integrity and message forgery detection. Confidentiality is the concept of ensuring that information is accessible only to those authorized to have access. In network communication, this is the process of preventing eavesdropping. The communication can still be eavesdropped, but TLS ensures that only the authorized parts are able to understand the content, by using encryption. \\
+While confidentiality ensures that an unauthorized party cannot read the content, preserving integrity is the process of ensuring that the information is not changed by anyone not authorized to do so. Integrity is preserved by including secure hash values. When a message is received, its secure hash value is generated by using a secret key, known only to the authorized parties, and the content of the message. If this value is equal to the one attached to the message, it has not been modified by an unauthorized party. Message forgery detection is the process of ensuring that a message is sent from whom it is claimed to be sent from. The typical message forgery scenario in TLS is that a message has been copied and resent later. To prevent this, TLS uses sequence numbers on the messages. The sequence number is not a part of the message, but is included when calculating the secure hash value.
+TLS offers authentication by using digital certificates. \cite{iso27001,sansinstitute,morrissey}
+
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.5]{img/sslstack}
+\caption{The SSL stack}
+\end{center}
+\end{figure}
+
+In the OSI model, TLS is above the transport layer and below the application layer. 
+\begin{quote}
+A layer is a collection of conceptually similar functions that provide services to the layer above it and receives services from the layer below it. \cite{wikiosi}. 
+\end{quote}
+TLS relies on the TCP protocol at the transport layer, which offers a reliable end-to-end service.
+TLS is not just one single protocol, but four protocols, organized in layers; the Handshake Protocol layer and the Record Protocol layer. The Record protocol is at the Record Protocol layer, and the Handshake Protocol layer consists of the Handshake protocol, the Alert protocol, and the Change Cipher Spec protocol. Each of these protocols are explained later in this section. \cite{rfc2246,berbecaru, stallings}
+
+At the lowest layer of TLS, the Record Protocol provides security to the higher-layer protocols. The Handshake protocol, the Alert protocol, and the Change Cipher Spec protocol are management protocols. If an application transmits a package to a destination that is not associated with a valid session, the Handshake Protocol is used to create a session. A session contains a session identifier, the peer certificate, compression method, cipher suite, master secret, and a flag indicating whether the session can be resumed. A cipher suite is a specified combination of a key exchange algorithm, a conventional encryption algorithm, and a MAC algorithm.  \cite{rfc2246}
+
+TLS is a hybrid system, combining a public-key scheme and a conventional encryption scheme. The public-key algorithm is used to exchange key, and the conventional encryption algorithm is used to encapsulate the data traffic with a secret key calculated from the key exchange. This approach exploits the best from both schemes, the convenience of public-key and the efficiency of conventional encryption.
+
+When a TLS connection is established, five general phases are executed \cite{berbecaru}:
+\begin{description}
+\item[Phase 1] {Create a TCP connection by performing a three-way-handshake}
+\item[Phase 2] {Perform a TLS handshake, either a full or a session resume}
+\item[Phase 3] {Transfer the application data, encrypted with the keys exchanged during the handshake}
+\item[Phase 4] {Close the TLS connection}
+\item[Phase 5] {Close the TCP connection}
+\end{description}
+
+\subsection{Goals}
+The goals of TLS Protocol, cited from the RFC2246\cite{rfc2246}, in their order of priority:
+\begin{description}
+\item[1. Cryptographic security:] {TLS should be used to establish a secure connection between two parties.}
+
+\item[2. Interoperability:] {Independent programmers should be able to develop applications utilizing TLS that will then be able to successfully exchange cryptographic parameters without knowledge of one another's code.}
+
+\item[3. Extensibility:] {TLS seeks to provide a framework into which new public key and bulk encryption methods can be incorporated as necessary. This will also accomplish two sub-goals: to prevent the need to create a new protocol (and risking the introduction of possible new weaknesses) and to avoid the need to implement an entire new security library.}
+
+\item[4. Relative efficiency:] {Cryptographic operations tend to be highly CPU intensive, particularly public key operations. For this reason, the TLS protocol has incorporated an optional session caching scheme to reduce the number of connections that need to be established from scratch. Additionally, care has been taken to reduce network activity.}
+\end{description}
+
+\subsection{The Record Protocol}
+The Record Protocol receives data from higher layers, such as the HTTP application protocol, and transmits it to the TCP layer after the processing is finished. The process involves fragmenting the data, compressing, adding MAC and encrypting, append header information, and transmiting the packet to the underlying TCP protocol. When receiving packets from the TCP layer, the same procedures are performed in reverse order, and finally delivered to the appropriate protocol at the layer above. The role of the Record protocol is to offer integrity and confidentiality to the upper layer protocols. \cite{berbecaru, rfc2246}
+
+The first step, fragmentation, consists of splitting the received data into TLSPlaintext record blocks/chunks that are $2^{14}$ bytes or less. The TLSPlaintext blocks will be compressed if the compression algorithm defined in the session state is specified. Initially, this compression algorithm is CompressionMethod.null, but the handshake may change this if both parties support another lossless compression algorithm. After the compression, the TLSPlaintext is transformed to a new structure referred to as TLSCompressed. The block is called TLSCompressed even if the compression algorithm is empty and no compression is performed. \cite{rfc2246}
+
+To ensure message integrity, a MAC is attached to the TLSCompressed block. The MAC is generated by using the HMAC\_hash function, where hash is the MAC algorithm specified in the chosen cipher suite of the current session. The HMAC\_hash function takes a secret and a seed as input, and produces a fixed-size output. The secret used is either \emph{client\_write\_MAC\_secret} or \emph{server\_write\_MAC\_secret}, depending who the sender is. The seed is a concatenation of the sequence number, content type, protocol version, the length of TLSCompressed, and the content of TLSCompressed. The HMAC\_hash function is defined in Section \ref{sec:computation}. 
+                     
+The next step is to transform the TLSCompressed, and its attached MAC, into a TLSCiphertext structure. If the current session state has no cipher algorithm specified\footnote{i.e. BulkCipherAlgorithm.null}, the block will remain unchanged. The secret used in this operation is either \emph{client\_write\_key} or \emph{server\_write\_key}, depending on who the sender is. \cite{rfc2246}
+
+Finally, before transmitting the result to the underlying protocol, a Record Protocol header is appended. The header consists of content type, protocol version and length of the TLSCompressed block. Content type specifies the higher-level protocol that delivered the data to the record protocol, protocol version specifies the SSL/TLS version being employed, length is the size of the data fragment, and data is the content of the application data fragment. \cite{rfc2246}
+
+The procedures described are illustrated in the figure below.videre i dette kapittelet blir de komponentene henvist til
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.8]{img/record}
+\caption{The Record Protocol}
+\end{center}
+\end{figure}
+
+% http://httpd.apache.org/docs/2.0/ssl/ssl_intro.html
+
+\subsection{The Cipher Change Spec Protocol}
+This protocol consists of a single message of one byte, with the value '1', and is sent to inform the other party that all messages after this will be encrypted using the newly negotiated cipher suite and secret key. Both the client and the server must send the message before the session can be agreed as established. \cite{stallings,rfc2246}
+
+\subsection{The Alert Protocol}
+If there, at any point in the communication, a warning or error occurs, an Alert protocol message is sent with the appropriate degree of seriousness and error code. The severity may be either fatal or warning. In case of fatal, the session is immediately terminated. The error codes are predefined and can be found in Appendix \ref{appendix:tls}. \cite{stallings,rfc2246}
+
+\subsection{The Handshake Protocol}
+\label{sec:handshake}
+The Handshake Protocol is the most complex part of TLS. The Handshake Protocol is responsible for negotiating the secure attributes of a session. The messages sent during the handshake have a strict order they must follow, otherwise it will result in a fatal error. The table below provides a summary of the messages sent during a full handshake.
+
+\begin{table}[H]
+\centering
+\caption{TLS Handshake messages}
+\label{TLS Handshake messages}
+\begin{small}
+\begin{tabular}{ l | l | p{9cm} }
+\hline
+1. Client Hello & client $\Rightarrow$ server & session id, nonce, supported cipher suites, supported compression methods\\
+2. Server Hello & server $\Rightarrow$ client & session id, nonce, chosen cipher suite, chosen compression method\\
+3. Certificate* & server $\Rightarrow$ client & certificate\\
+4. Key Exchange* & server $\Rightarrow$ client & params, hash(params)\\
+5. Certificate Request* & server $\Rightarrow$ client & certificate type, distinguished name\\
+6. Hello Done & server $\Rightarrow$ client & (empty)\\
+7. Certificate* & client $\Rightarrow$ server & certificate\\
+8. Key Exchange & client $\Rightarrow$ server & encrypt(premaster secret)\\
+9. Certificate Verify* & client $\Rightarrow$ server & hash(message 1-8)\\
+10. Change Cipher Spec** & client $\Rightarrow$ server & (empty)\\
+11. Finished & client $\Rightarrow$ server & prf(master secret, "client finished", message 1-9)\\
+12. Change Cipher Spec** & server $\Rightarrow$ client & (empty)\\
+13. Finished & server $\Rightarrow$ client & prf(master secret, "server finished", message 1-9)\\
+\hline
+\end{tabular}
+\end{small}
+\end{table}
+* This messages is optional\\
+*** This is not an actual handshake messages, but \emph{Change Cipher Spec} protocol message. It is included because it has an important role in the handshake.
+
+The handshake messages are according to the RFC2246\cite{rfc2246}, TLS Protocol version 1.0. The latest version, TLSv1.2, has several improvements from version 1.0, but the handshake steps are quite similar. The most important improvements are added extensions ability, cipher suite independent pseudo-random function, hash signature algorithm is specified, and changes in the available and mandatory cipher suites. \cite{rfc5246}
+
+\textbf{1. Client Hello}\\ 
+When a client connects to a server, the first message sent is the \emph{ClientHello}. The client may also send this message at any time during a session if it wishes to exchange new security attributes. 
+
+The content of this message is as follows:
+
+\begin{description}
+\item[Protocol version] {The SSL/TLS protocol which the client wants to communicate by}
+\item[Random] {Generated by the client with a secure random generator.}
+\item[Session ID] {Used when the client wants to resume an old session. Empty if this is a new session or new security attributes should be generated.}
+\item[Cipher suite] {A list of the supported cipher suites, sorted by the client's preference. }
+\item[Compression method] {A list of the supported compression methods, sorted by the clients preference.}
+\end{description}
+
+\textbf{2. Server Hello}\\
+The server responds with a \emph{ServerHello} message that contains the chosen parameters by the server. If no acceptable set of algorithms	were found, the server will respond with a fatal error alert and the session will be terminated. In addition to the chosen protocol version, cipher suite and compression method, it contains a server random \(ServerHello.random\) generated with a secure random generator. The ClientHello.random and ServerHello.random is completely independent of each other and will be used when generating the master secret. This message also contains the session identifier. If the ClientHello.session\_id was not empty, the server will respond with the same session ID if it found a valid session with this ID. In this case, the handshake will proceed directly to the finished messages.
+
+\textbf{3. Server Certificate} (Optional)\\
+The server sends its digital certificate, generally a X.509v3 certificate. The certificate must have a key that matches the key exchange algorithm in the cipher suite. This message may contain more than one certificate, in that case listed as a certificate chain. If it is a chain, the first certificate must be the servers, and each succeeding must certify the preceding certificate. The chain is mostly used to authenticate the server by having a root certificate as the last in the chain. See more in section \ref{sec:certificate}. This message is optional, and sent only if the agreed key exchange method is not anonymous.
+
+\textbf{4. Server Key Exchange} (Optional)\\
+This message is sent only if the certificate does not contain enough information for the client to exchange the premaster secret. 
+
+\textbf{5. Certificate Request} (Optional)\\
+The server can optionally request a certificate from the client. If sent, this message contains the certificate type and the distinguished name of the certificate authorities the server accepts. 
+
+\textbf{6. Server Hello Done}\\
+The \emph{ServerHelloDone} message indicates that the server is finished with its hello messages. At this point, the client should verify the server certificate, and whether it accepts the parameters from the server hello messages. 
+
+\textbf{7. Client Certificate} (Optional)\\
+If the server sent the \emph{CertificateRequest} message, the client must send this message in return. If the client does not have a valid certificate, it sends an empty \emph{CertificateRequest} message; otherwise, it sends the certificate at the same format as described in the \emph{ServerCertificate} message. 
+
+\textbf{8. Client Key Exchange}\\
+Depending on the key exchange algorithm, and whether the client certificate message has been sent, this message contains either the premaster secret encrypted with RSA, Diffie-Hellman parameters used to compute premaster secret, or empty if the client certificate message is sent and an appropriate key exchange method is used. In the first scenario, where the key exchange method is RSA, the client generates a premaster secret, which it encrypts with the public key from the server's certificate. If the certificate's public key is not RSA, the client will encrypt using the RSA values from the server key exchange message. In addition to the premaster secret, this message contains the protocol version specified in the client hello message to detect roll-back attacks. The server must check that these two versions are identical before proceeding. In case of Diffie-Hellman parameters, this message contains the client's Diffie-Hellman Yc public value.	
+
+\textbf{9. Certificate Verify} (Optional)\\
+If the client sent a certificate to the server, and the certificate has signing capability, this message contains a signature and is sent to verify the client certificate. The signature is a hash of the concatenation of all previous handshake messages, which are signed with the client's private key.
+
+It is not necessary for the server to verify its certificate like this. If the server does not have the private key that belongs to the certificate, it cannot decrypt the premaster secret and will therefore be unable to create the master key.
+ 
+The master secret can now be computed with the PRF, explained in section \ref{sec:computation}
+
+\textbf{10. Client Change Cipher Spec}\\
+The client sends this message to indicate that any succeeding message from the client will be encrypted with the decided cipher suite and the computed key. This is actually not a handshake message, but a Change Cipher Spec protocol message, consisting of a single byte '1'.
+
+\textbf{11. Client Finished}\\
+The finished message is sent by the client and used to verify that the key exchange and authentication process were successful, and that no previous message has been tampered with. This is the first message from the client that is encrypted with the negotiated parameters, and contains a PRF hash that the receiving part must verify. The secret sent to PRF is the master secret, the label is "client finished" and the seed is a concatenation of MD5 and SHA-1 values of all the previously exchanged handshake messages.
+
+\textbf{12. Server Change Cipher Spec}\\
+The server sends this message to indicate that any succeeding message from the server will be encrypted with the decided cipher suite and the computed key. This is actually not a handshake message, but a Change Cipher Spec protocol message, consisting of a single byte '1'.
+
+\textbf{13. Server Finished}\\
+The finished message is sent by the server and used to verify the key exchange and authentication process were successful, and that no previous message has been tampered with. This is the first message from the server that is encrypted with the negotiated parameters, and contains a PRF hash, explained in section \ref{sec:computation}, that the receiving part must verify. The secret sent to PRF is the master secret, label is "server finished" and the seed is a concatenation of MD5 and SHA-1 values of all the previously exchanged handshake messages.
+
+\textbf{Application data}\\
+At this point, the handshake is finished and application data can be sent securely between the parties.
+
+\subsection{Computation}
+\label{sec:computation}
+TLS uses a pseudorandom function (PRF) to calculate keys and to verify the handshake messages. The PRF takes a seed, a label, and a secret, and produces an output of arbitrary length. In TLSv1, PRF is defined as: \cite{rfc2246}
+\begin{quote}
+PRF(secret, label, seed) = P\_MD5(S1, label + seed) XOR P\_SHA-1(S2, label + seed);
+\end{quote}
+It uses two hash functions, MD5 and SHA-1, to guarantee the security even if one of the algorithms is found insecure. The S1 and S2 values are the secret split into two parts, where S1 is the left half and S2 is the right half. The + symbol indicates concatenation, and XOR indicates a bitwise XOR operation.
+
+The P\_MD5 and P\_SHA-1 functions are defined as:                       
+\begin{quote}
+P\_hash(secret, seed) = HMAC\_hash(secret, A(1) + seed) + HMAC\_hash(secret, A(2) + seed) +  ...
+\end{quote}
+Where  A(0) = seed, and A(i) = HMAC\_hash(secret, A(i-1))
+
+The function iterates as many times as necessary to produce the required length of output. The MD5 and SHA-1 hash functions produces different output sizes\footnote{128 bit MD5 and 160 bit SHA-1}, hence the number of iterations of MD5 is higher than with SHA-1, except when the output size is less than the length of a MD5 hash.
+
+The key calculation is described below:
+
+\begin{quote}
+master\_secret = PRF(premaster\_secret, "master secret", ClientHello.random + ServerHello.random)\\
+key\_block = PRF(master\_secret, "key expansion", ClientHello.random + ServerHello.random)
+\end{quote}
+
+The key\_block is partitioned into the following keys, according to their specified length;
+\begin{quote}
+client\_write\_MAC\_secret\\
+server\_write\_MAC\_secret\\
+client\_write\_key\\
+server\_write\_key\\
+client\_write\_IV\\
+server\_write\_IV\\
+\end{quote}
+
+\chapter{The Implementation}
+
+This chapter contains a more or less chronologic report of the different stages
+this project has gone through, and we describe the design of the solvers we have
+produced and discuss the decisions we have made. We also discuss the largest
+hurdle we encountered: numerical instability.
+
+\section{Overall approach}
+
+\section{Classes and Packages}
+
+common Log: 19
+common LogEvent: 31
+common Tools: 110
+src CountLineNumbers: 51
+cipher None: 23
+cipher Rijndael: 551
+cipher Rijndael2: 578
+compression None: 16
+crypto ICipher: 8
+crypto ICompression: 5
+crypto IKeyExchange: 10
+crypto IMac: 5
+keyexchange DH: 48
+keyexchange None: 54
+keyexchange RSA: 101
+mac None: 11
+mac SHA1: 152
+mac SHA256: 108
+crypto PRF: 57
+gui EduTLS: 323
+src Main: 19
+server IPeerHost: 12
+server Listener: 125
+server PeerSocket: 150
+tls AlertException: 55
+tls Certificate: 112
+tls CipherSuite: 49
+tls ConnectionStates: 25
+handshake ChangeCipherSpec: 16
+handshake ClientHello: 82
+handshake ClientKeyExchange: 62
+handshake Finished: 18
+handshake IHandshakeMessage: 7
+handshake ServerCertificate: 107
+handshake ServerHello: 80
+handshake ServerHelloDone: 16
+handshake ServerKeyExchange: 25
+tls IApplication: 6
+record TLSCiphertext: 105
+record TLSCompressed: 40
+record TLSPlaintext: 28
+tls State: 172
+tls TLSAlert: 28
+tls TLSEngine: 132
+tls TLSHandshake: 217
+tls TLSRecord: 192
+
+\section{Implementation problems}
+* Socket writing too fast
+* Threading
+* GUI SWT 64 bits
+
+\section{Test Driven Development}
+
+\chapter{Security Analysis}
+CA
+Design
+
+
+\chapter{Evaluation}
+Improvements from EduSSL
+Too large? > 5KLOC
+
+\chapter{TODO}
+Theory: DF
+Security analysis with own opinion. TRUST CA!
+Reference
+TDD
+
+\end{document}

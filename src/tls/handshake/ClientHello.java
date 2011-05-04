@@ -7,6 +7,7 @@ import tls.CipherSuite;
 import tls.TLSEngine;
 import tls.TLSHandshake;
 
+import common.LogEvent;
 import common.Tools;
 
 public class ClientHello implements IHandshakeMessage {
@@ -91,7 +92,19 @@ public class ClientHello implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ClientHello";
+	}
+
+	@Override
+	public String getStringValue() {
+		String tmp = "Client Random: " + Tools.byteArrayToString(clientRandom) + LogEvent.NEWLINE;
+		tmp += "Session ID: " + Tools.byteArrayToString(sessionId) + LogEvent.NEWLINE;
+		tmp += "Compression method: None" + LogEvent.NEWLINE;
+		tmp += "Cipher Suites: ";
+		for(CipherSuite s : cipherSuites) {
+			tmp += s.getName() + " ";
+		}
+		return tmp;
 	}
 }

@@ -1,5 +1,7 @@
 package tls.handshake;
 
+import common.Tools;
+
 import tls.TLSEngine;
 import tls.TLSHandshake;
 
@@ -26,8 +28,13 @@ public class ServerKeyExchange implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ServerKeyExchange";
+	}
+
+	@Override
+	public String getStringValue() {
+		return Tools.byteArrayToString(value);
 	}
 
 }

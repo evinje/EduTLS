@@ -45,7 +45,7 @@ public class IntegrationTest extends TestCase implements tls.IApplication {
 		clientEngine.send(message);
 		Thread.sleep(200);
 		if(messageIn == null)
-			fail("No message??");
+			fail("Message is missing");
 		assertEquals(new String(message), messageIn);
 	}
 	

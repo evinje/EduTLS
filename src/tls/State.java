@@ -37,7 +37,7 @@ public class State {
 	private int sequenceNumberOut;
 	private int sequenceNumberIn;
 	
-	private StringBuilder handshakeLog;
+	private LogEvent handshakeLog;
 	
 	public State(IPeerHost peer) {
 		this.peer = peer;
@@ -49,7 +49,9 @@ public class State {
 		this.sequenceNumberIn = 0;
 		this.changeCipherSpecClient = false;
 		this.changeCipherSpecServer = false;
-		handshakeLog = new StringBuilder("Initializing connection state with BulkCipherAlgorithm.null and CompressionMethod.null");
+		handshakeLog = new LogEvent("Initializing connection state","Remote host is " + peer.getPeerId());
+		handshakeLog.addDetails("BulkCipherAlgorithm.null");
+		handshakeLog.addDetails("CompressionMethod.null");
 	}
 	
 	public boolean getChangeCipherSpecClient() {
@@ -67,9 +69,11 @@ public class State {
 	
 	public void setChangeCipherSpecClient() {
 		this.changeCipherSpecClient = true;
+		handshakeLog.addDetails("Change Cipher Spec for the client entity has been set", true);
 	}
 	public void setChangeCipherSpecServer() {
 		this.changeCipherSpecServer = true;
+		handshakeLog.addDetails("Change Cipher Spec for the server entity has been set", true);
 	}
 	
 	public String getPeerHost() {
@@ -104,6 +108,7 @@ public class State {
 		this.keyExchangeAlgorithm = cipherSuite.getKeyExchange();
 		this.macAlgorithm = cipherSuite.getMac();
 		this.compressionMethod = cipherSuite.getCompression();
+		handshakeLog.addDetails("Cipher Suite has been changed; " + cipherSuite.getName(), true);
 		generateKeys();
 	}
 	
@@ -185,20 +190,16 @@ public class State {
 			return server_write_MAC_key;
 	}
 	
-	public void addHandshakeLog(String log) {
-		handshakeLog.append(LogEvent.NEWLINE);
-		double time = Math.abs(System.currentTimeMillis() - LogEvent.APP_START);
-		StringBuilder sb = new StringBuilder();
-		sb.append(time/1000);
-		while(sb.length() < 8)
-			sb.insert(0," ");
-		handshakeLog.append("[" + sb.toString() + "] " + log);
+	public void addHandshakeLog(LogEvent log) {
+		handshakeLog.addLogEvent(log);
 	}
 	
-	public String getHandshakeLog() {
-		String tmp = handshakeLog.toString();
-		handshakeLog = new StringBuilder();
-		return tmp;
+	public void addHandshakeLog(String info) {
+		handshakeLog.addDetails(info, true);
+	}
+	
+	public LogEvent getHandshakeLog() {
+		return handshakeLog;
 	}
 	
 	private void generateKeys() {
@@ -235,6 +236,8 @@ public class State {
 		
 		Tools.byteCopy(key_block, server_write_IV, offset);
 		offset += server_write_IV.length;
+		
+		handshakeLog.addDetails("The connection keys are now generated (" + key_block.length + " bytes total)", true);
 	}
 	
 }

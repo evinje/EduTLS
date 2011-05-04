@@ -14,6 +14,7 @@ public class DH implements IKeyExchange {
 	Random rnd;
 
 	public DH(int bitLength) {
+		// pre-generated p and g
 		g = new BigInteger("7013892680988498279188554023449657170451011019571822843525388197555796586834894509532314177249376660084062463676554469138711964180514384717777200947267417");
 		p = new BigInteger("7468600078466426114796463824125526412203106612609790292466106804957294177866776167499103011102236201812549527633940659531011732848077078911342294621247679");
 		rnd = new Random();
@@ -31,6 +32,7 @@ public class DH implements IKeyExchange {
 //        Tools.print(dhSkipParamSpec.getG().toString());
 //        Tools.print(dhSkipParamSpec.getP().toString());
 	}
+	
 	
 	public DH(BigInteger p, BigInteger g) {
 		this.p = p;
@@ -69,6 +71,11 @@ public class DH implements IKeyExchange {
 	@Override
 	public boolean requireServerKeyExchange() {
 		return true;
+	}
+	
+	@Override
+	public BigInteger getSecretKey() {
+		return secretKey;
 	}
 
 }

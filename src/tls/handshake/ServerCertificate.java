@@ -112,8 +112,30 @@ public class ServerCertificate implements IHandshakeMessage {
 	}
 
 	@Override
-	public String getString() {
+	public String toString() {
 		return "ServerCertificate";
+	}
+	
+	@Override
+	public String getStringValue() {
+		StringBuilder cert = new StringBuilder();
+		cert.append("Certificate:" + NL);
+		cert.append("Data:" + NL);
+		cert.append("Version:" + versionNumber + NL);
+		cert.append("Serial Number:" + serialNumber + NL);
+		cert.append("Signature Algorithm:" + NL);
+		cert.append("Issuer:" + issuer + NL);
+		cert.append("Validity:" + NL);
+		cert.append("Not Before:" + notValidBefore.toString() + NL);
+		cert.append("Not After:" + notValidAfter.toString() + NL);
+        cert.append("Subject:" + subject + NL);
+        cert.append("Public Key Algorithm:" + key.getAlgorithm() + NL);
+        cert.append("RSA Public Key: (" + key.getPublicKey().bitLength() + " bit)" + NL);
+        cert.append("Modulus (" + key.getPublicModulus().bitLength() + " bit):" + NL);
+        cert.append("" + key.getPublicModulus() + NL);
+        cert.append("Exponent: " + key.getPublicKey() + NL);
+        cert.append("Signature Algorithm: " + NL);
+		return cert.toString();
 	}
 
 }

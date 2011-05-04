@@ -66,6 +66,7 @@ public class PeerSocket implements IPeerHost {
 	}
 	
 	public boolean reconnect() {
+		Log.get().add("Reconnecting to " + host,"Connection was lost, starting to reconnect.");
 		try {
 			this.socket = new Socket(host, Listener.PORT);
 			init();

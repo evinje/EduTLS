@@ -92,10 +92,10 @@ public class RSA implements crypto.IKeyExchange {
 		return s;
 	}
 	
-	public BigInteger getPrivate() { return d; }
-	public BigInteger getPublic() { return e; }
-	public BigInteger getModulus() { return n; }
-	
+//	public BigInteger getPrivate() { return d; }
+//	public BigInteger getPublic() { return e; }
+//	public BigInteger getModulus() { return n; }
+//	
 	public BigInteger encrypt(BigInteger message) {
 		return message.modPow(e, n);
 	}
@@ -135,7 +135,10 @@ public class RSA implements crypto.IKeyExchange {
 //		}
 	
 	
-	
+	@Override
+	public BigInteger getSecretKey() {
+		return d;
+	}
 
 
 	@Override

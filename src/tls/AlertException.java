@@ -3,10 +3,21 @@ package tls;
 import common.Log;
 import common.LogEvent;
 
+
+
+/**
+ * An AlertException is thrown whenever
+ * a error, fatal or warning, is raised
+ * during the TLS communication. The 
+ * Exception results in a TLSRecord
+ * element of type TLSAlert is sent
+ * to the remote peer, with information
+ * on the exception. If it is fatal,
+ * the connection is teared down.
+ *
+ * @author 	Eivind Vinje
+ */
 public class AlertException extends Exception{
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -3113852097560498542L;
 	public static int close_notify = 0;
 	public static int unexpected_message = 10;
@@ -41,6 +52,14 @@ public class AlertException extends Exception{
 	
 	public AlertException() {}
 
+	/**
+	 * Raises an Alert Exception. A log event
+	 * is created with information on the caller.
+	 * 
+	 * @param level int, warning (alert_warning 1) or fatal (alert_fatal 2)
+	 * @param code	int, the code
+	 * @returns	Nothing, it is a constructor
+	 */
 	public AlertException(int level, int code, String description) {
 	    super(description);
 	    this.alertDescription = description;
@@ -48,10 +67,13 @@ public class AlertException extends Exception{
 	    this.alertCode = code;
 	    String caller = Thread.currentThread().getStackTrace()[2].getClassName() + " " + Thread.currentThread().getStackTrace()[2].getLineNumber();
 	    Log.get().add(new LogEvent("AlertException!", description + " (From: " + caller + ")"));
-//	    Tools.print("Oh, AlertException: " + description);
-//	    Tools.print(Thread.currentThread().getStackTrace()[2].getClassName() + " " + Thread.currentThread().getStackTrace()[2].getLineNumber());
 	    }
 	
+	/**
+	 * A textual representation of the exception
+	 * 
+	 * @returns String level, code and description
+	 */
 	public String toString() {
 		return alertLevel + " " + alertCode + " - " + alertDescription;
 	}

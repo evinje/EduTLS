@@ -65,7 +65,7 @@ public class TLSEngine {
 	 * @returns	boolean Indicating if the connection was established
 	 */
 	public boolean connect() throws AlertException, InterruptedException {
-		LogEvent le = new LogEvent("Connecting to " + peer.getPeerId(),"");
+		LogEvent le = new LogEvent("Connect to " + peer.getPeerId(),"");
 		Log.get().add(le);
 		if(!peer.isClient())
 			throw new AlertException(0,0,"WHATTA??");
@@ -84,7 +84,7 @@ public class TLSEngine {
 				Thread.sleep(100);
 			i++;
 		}
-		le.addDetails(state.getHandshakeLog());
+		le.addLogEvent(state.getHandshakeLog());
 		if(handshake.isFinished()) {
 			le.addDetails("Connection successful");
 			return true;

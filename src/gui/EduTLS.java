@@ -1,6 +1,5 @@
 package gui;
 
-import java.awt.Color;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,7 +8,6 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
-import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -32,6 +30,7 @@ import javax.swing.border.Border;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import server.Listener;
 import server.PeerSocket;
@@ -42,7 +41,6 @@ import tls.TLSEngine;
 import common.Log;
 import common.LogEvent;
 import common.Tools;
-import javax.swing.ScrollPaneConstants;
 
 /**
  * The graphical user interface
@@ -72,6 +70,8 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	private JButton btnPerformance;
 	private DefaultMutableTreeNode treeRootNode;
 	private JTree lstLogTree;
+	private DefaultTreeModel lstLogTreeModel;
+	
 	/**
 	 * The Constructor
 	 */
@@ -86,7 +86,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 //		logevents = new ArrayList<LogEvent>();
 		Log.get().addObserver(this);
 		initializeComponents();
-		initializeActionListeners();
+//		initializeActionListeners();
 	}
 
 	/*
@@ -124,6 +124,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 
 		btnSend = new JButton("Send");
 		btnSend.setBounds(473, 146, 89, 23);
+		btnSend.addActionListener(new ActionListenerImpl());
 		pnlChatArea.add(btnSend);
 
 		JPanel pnlLogArea = new JPanel();
@@ -146,12 +147,14 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 
 		treeRootNode = new DefaultMutableTreeNode("Application startup");
 		lstLogTree = new JTree(treeRootNode);
-		lstLogTree.setVisibleRowCount(8);
+//		lstLogTree.setVisibleRowCount(8);
 		lstLogTree.setRootVisible(true);
+		
 		lstLogTree.setBounds(0,0,pnlLogList.getWidth(), pnlLogList.getHeight()-5);
 		lstLogTree.setSize(pnlLogList.getWidth(), pnlLogList.getHeight()-5);
 		lstLogTree.addTreeSelectionListener(new TreeListAction());
 		JScrollPane scrollPane = new JScrollPane(lstLogTree);
+		lstLogTreeModel = (DefaultTreeModel) lstLogTree.getModel();
 		scrollPane.setSize(pnlLogList.getWidth(), pnlLogList.getHeight());
 		pnlLogList.add(scrollPane);
 
@@ -185,6 +188,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 
 		btnAddConnection = new JButton("Add");
 		btnAddConnection.setBounds(111, 45, 61, 23);
+		btnAddConnection.addActionListener(new ActionListenerImpl());
 		pnlSettingsArea.add(btnAddConnection);
 
 		JLabel lblExistingSessions = new JLabel("Existing sessions:");
@@ -248,15 +252,16 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		pnlCipherSuites.add(lblCipherSuites);
 		btnPerformance = new JButton("Performance");
 		btnPerformance.setBounds(10, 144, 162, 23);
+		btnPerformance.addActionListener(new ActionListenerImpl());
 		pnlToolsArea.add(btnPerformance);
 
 		int i = 20;
-		for(CipherSuite s : TLSEngine.cipherSuites) {
+		for(CipherSuite s : TLSEngine.allCipherSuites) {
 			JCheckBox chckbxCipherSuite = new JCheckBox(s.getName());
 			chckbxCipherSuite.setToolTipText(s.getName());
 			chckbxCipherSuite.setBounds(0, i, 160, 20);
 			chckbxCipherSuite.setSelected(true);
-
+			chckbxCipherSuite.addActionListener(new ActionListenerImpl());
 			pnlCipherSuites.add(chckbxCipherSuite);
 			i=i+20;
 		}
@@ -267,43 +272,6 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		repaint();
 	}
 
-	/*
-	 * Adds action listeners (on click events)
-	 * to the buttons
-	 */
-	private void initializeActionListeners() {
-		btnSend.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if(!txtChatSendMsg.getText().equals("")) {
-					try {
-						sendMessage(txtChatSendMsg.getText());
-					} catch (AlertException e) {
-						displayMessageBox("Not connected");
-					}
-					txtChatSendMsg.setText("");
-				}
-			}
-		});
-
-		btnAddConnection.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if(!txtAddConnection.getText().equals("")) {
-					if(testConnection(txtAddConnection.getText()))
-						addConnection(txtAddConnection.getText());
-					txtAddConnection.setText("");
-				}
-			}
-		});
-
-		btnPerformance.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				testPerformance();
-			}
-		});
-	}
 
 	private void testPerformance() {
 		btnPerformance.setEnabled(false);
@@ -495,7 +463,6 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	 * @returns	Nothing
 	 */
 	private void addConnection(String host) {
-		//modelSessions.addElement(host);
 		if(testConnection(host))
 			lstModelSessions.add(0, host);
 		else
@@ -569,22 +536,56 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		addLog(le, treeRootNode);
 	}
 	public void addLog(LogEvent le, DefaultMutableTreeNode root) {
-		root.add(new DefaultMutableTreeNode(le));
+		lstLogTreeModel.insertNodeInto(new DefaultMutableTreeNode(le), root, root.getChildCount());
 		lstLogTree.repaint();
 	}
 
 
+	private class ActionListenerImpl implements ActionListener {
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			// SEND BUTTON CLICKED
+			if(arg0.getSource().equals(btnSend)) {
+				if(!txtChatSendMsg.getText().equals("")) {
+					try {
+						sendMessage(txtChatSendMsg.getText());
+					} catch (AlertException e) {
+						displayMessageBox("Not connected");
+					}
+					txtChatSendMsg.setText("");
+				}
+			}
+			// ADD CONNECTION BUTTON CLICKED
+			else if(arg0.getSource().equals(btnAddConnection)) {
+				if(!txtAddConnection.getText().equals("")) {
+					addConnection(txtAddConnection.getText());
+					txtAddConnection.setText("");
+				}
+			}
+			// PERFORMANCE BUTTON CLICKED
+			else if(arg0.getSource().equals(btnPerformance)) {
+				testPerformance();
+			}
+			
+			else if(arg0.getSource() instanceof JCheckBox) {
+				JCheckBox changed = (JCheckBox)arg0.getSource();
+				try {
+					TLSEngine.findCipherSuite(changed.getText()).setEnabled(changed.isSelected());
+				} catch(Exception e) {
+					Tools.printerr(e.getMessage());
+				}
+			}
+			
+		}
+		
+	}
 
 	private class ListAction extends MouseAdapter {
 		/*
 		 * Used to control the JList onClick events
 		 */
 		public void mouseClicked(MouseEvent e) {
-			//			if(e.getSource().equals(lstLog)) {
-			//				int index = lstLog.locationToIndex(e.getPoint());
-			//				if(index >= 0 && index < logevents.size())
-			//					txtLogInfo.setText(logevents.get(index).getDetails());
-			//			}
 			if(e.getSource().equals(lstExistingSessions)) {
 				int index = lstExistingSessions.locationToIndex(e.getPoint());
 				if(index < 0)
@@ -592,8 +593,6 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 				String host = (String)lstExistingSessions.getModel().getElementAt(index);
 				if(testConnection(host))
 					connectTo(host);
-				else
-					lstExistingSessions.getComponent(index).setBackground(Color.LIGHT_GRAY);
 			}
 		}
 	}
@@ -619,6 +618,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 					LogEvent log = (LogEvent)node.getUserObject();
 					txtLogInfo.setText(log.getDetails());
 					if(log.getSubLogEvents().size()>0) {
+						// TODO open node
 						for(LogEvent tmpLog : log.getSubLogEvents())
 							addLog(tmpLog, node);
 					}

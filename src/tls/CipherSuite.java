@@ -1,7 +1,5 @@
 package tls;
 
-import common.Tools;
-
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;
@@ -25,6 +23,8 @@ public class CipherSuite {
 	private String name;
 	private byte[] value;
 	
+	private boolean isEnabled;
+	
 	public CipherSuite(String name, byte[] value, IMac mac, ICipher cipher, ICompression compression, IKeyExchange keyExchange) {
 		this.name = name;
 		this.value = value;
@@ -32,15 +32,16 @@ public class CipherSuite {
 		this.cipherAlg = cipher;
 		this.compressionAlg = compression;
 		this.keyExchangeAlg = keyExchange;
+		isEnabled = true;
 	}
 	
-//	public CipherSuite(String name, byte[] value) {
-//		this.name = name;
-//		this.value = value;
-//		this.macAlg = new crypto.mac.None();
-//		this.compressionAlg = new crypto.compression.None();
-//		this.keyExchangeAlg = new crypto.keyexchange.None();
-//	}
+	public boolean isEnabled() {
+		return isEnabled;
+	}
+	
+	public void setEnabled(boolean enabled) {
+		isEnabled = enabled;
+	}
 	
 	public String toString() {
 		return name;

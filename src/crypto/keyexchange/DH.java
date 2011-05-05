@@ -10,6 +10,7 @@ public class DH implements IKeyExchange {
 	BigInteger p, g;
 	// X = private, Y = public
 	BigInteger Xa, Ya, Yb;
+	// The secret key, calculated from private and public
 	BigInteger secretKey;
 	
 	Random rnd;
@@ -35,9 +36,11 @@ public class DH implements IKeyExchange {
 	}
 	
 	
-	public DH(BigInteger p, BigInteger g) {
+	public DH(BigInteger Yb, BigInteger p) {
+		this(Yb.bitLength());
+		this.Yb = Yb;
 		this.p = p;
-		this.g = g;
+		secretKey = Yb.modPow(Xa, p);
 	}
 
 	@Override

@@ -38,8 +38,8 @@ public class TLSEngine {
 	public static final byte HANDSHAKE = 22;
 	
 	// List of all cipher suites
-	public static ArrayList<CipherSuite> cipherSuites = getAllCipherSuites();
-	
+	public static ArrayList<CipherSuite> allCipherSuites = getAllCipherSuites();
+	private static ArrayList<State> states = new ArrayList<State>();
 	private TLSHandshake handshake;
 	private IApplication app;
 	private State state;
@@ -56,6 +56,7 @@ public class TLSEngine {
 		this.peer = peer;
 		this.app = app;
 		state = new State(peer);
+		states.add(state);
 		if(!peer.isClient())
 			handshake = new TLSHandshake(state);
 	}
@@ -174,6 +175,24 @@ public class TLSEngine {
 		return state;
 	}
 	
+	public static State findState(byte[] sessionId) {
+		for(State s : states) {
+			if(Tools.compareByteArray(s.getSessionId(), sessionId))
+					return s;
+		}
+		return null;
+	}
+	public static State findState(String peerId) {
+		for(State s : states) {
+			if(s.getPeerHost().equals(peerId)) {
+				// TODO: Check for time validity period
+				return s;
+			}
+		}
+		return null;
+	}
+	
+	
 	private static ArrayList<CipherSuite> getAllCipherSuites() {
 		ArrayList<CipherSuite> tmpCipherSuites = new ArrayList<CipherSuite>();
 		
@@ -203,8 +222,15 @@ public class TLSEngine {
 	}
 	
 	public static CipherSuite findCipherSuite(byte[] value) {
-		for(CipherSuite sc : cipherSuites)
+		for(CipherSuite sc : allCipherSuites)
 			if(sc.getValue()[0] == value[0] && sc.getValue()[1] == value[1])
+				return sc;
+		return null;
+	}
+	
+	public static CipherSuite findCipherSuite(String name) {
+		for(CipherSuite sc : allCipherSuites)
+			if(sc.getName()==name)
 				return sc;
 		return null;
 	}

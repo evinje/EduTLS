@@ -3,7 +3,9 @@ package server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 import tls.AlertException;
@@ -17,6 +19,7 @@ import common.Tools;
 
 public class PeerSocket implements IPeerHost {
 	public static int SOCKET_TIMEOUT = 5000;
+	public static int SOCKET_OPEN_TIMEOUT = 1000;
 	private Socket socket;
 	private InputStream is;
 	private OutputStream os;
@@ -28,7 +31,9 @@ public class PeerSocket implements IPeerHost {
 		LogEvent le = new LogEvent("Testing connection to " + host,"");
 		Log.get().add(le);
 		try {
-			Socket tmpSocket = new Socket(host, Listener.PORT);
+			SocketAddress socketAddress = new InetSocketAddress(host, Listener.PORT);
+			Socket tmpSocket = new Socket();
+			tmpSocket.connect(socketAddress, SOCKET_OPEN_TIMEOUT);
 			le.addDetails("Socket has responded");
 			tmpSocket.setSoTimeout(SOCKET_TIMEOUT);
 			tmpSocket.getOutputStream().write(new byte[] { Listener.CONNECTION_TYPE_TEST });

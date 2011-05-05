@@ -29,13 +29,13 @@ public class State {
 	private byte[] server_write_encryption_key;
 	private byte[] client_write_IV;
 	private byte[] server_write_IV;
-	
+	private byte[] sessionId;
 	private IPeerHost peer;
 	private boolean changeCipherSpecClient;
 	private boolean changeCipherSpecServer;
 	
-	private int sequenceNumberOut;
-	private int sequenceNumberIn;
+//	private int sequenceNumberOut;
+//	private int sequenceNumberIn;
 	
 	private LogEvent handshakeLog;
 	
@@ -45,14 +45,16 @@ public class State {
 		this.macAlgorithm = new crypto.mac.None();
 		this.compressionMethod = new crypto.compression.None();
 		this.keyExchangeAlgorithm = new crypto.keyexchange.None();
-		this.sequenceNumberOut = 0;
-		this.sequenceNumberIn = 0;
+//		this.sequenceNumberOut = 0;
+//		this.sequenceNumberIn = 0;
 		this.changeCipherSpecClient = false;
 		this.changeCipherSpecServer = false;
 		handshakeLog = new LogEvent("Initializing connection state","Remote host is " + peer.getPeerId());
 		handshakeLog.addDetails("BulkCipherAlgorithm.null");
 		handshakeLog.addDetails("CompressionMethod.null");
+		setSessionId(new byte[TLSHandshake.SESSION_SIZE]);
 	}
+	
 	
 	public boolean getChangeCipherSpecClient() {
 		return changeCipherSpecClient;
@@ -80,13 +82,13 @@ public class State {
 		return peer.getPeerId();
 	}
 	
-	public int getSequenceNumberOut() {
-		return sequenceNumberOut++;
-	}
-	
-	public int getSequenceNumberIn() {
-		return sequenceNumberIn++;
-	}
+//	public int getSequenceNumberOut() {
+//		return sequenceNumberOut++;
+//	}
+//	
+//	public int getSequenceNumberIn() {
+//		return sequenceNumberIn++;
+//	}
 
 
 	public ConnectionEnd getEntityType() {
@@ -202,6 +204,24 @@ public class State {
 		return handshakeLog;
 	}
 	
+	public void setSessionId(byte[] sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public byte[] getSessionId() {
+		return sessionId;
+	}
+	
+	public void resumeSession(State state) {
+		// TODO: Clone state properties
+		cipherAlgorithm = state.getCipherAlgorithm();
+		macAlgorithm = state.getMacAlgorithm();
+		compressionMethod = state.getCompressionMethod();
+		keyExchangeAlgorithm = state.getKeyExchangeAlgorithm();
+		masterSecret = state.getMasterSecret();
+		generateKeys();
+	}
+
 	private void generateKeys() {
 		// setting up the right size
 		client_write_MAC_key = new byte[getMacAlgorithm().getSize()];

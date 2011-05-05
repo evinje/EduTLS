@@ -146,6 +146,13 @@ public class Tools {
 		return true;
 	}
 	
+	public static boolean isEmptyByteArray(byte[] array) {
+		if(array==null)
+			return true;
+		byte[] empty = new byte[array.length];
+		return compareByteArray(array, empty);
+	}
+	
 	public static void longToByteArray(long value, byte[] buf, int ofs) {
 			int tmp = (int) (value >>> 32); 
 			buf[ofs] = (byte) (tmp >>> 24); 
@@ -177,6 +184,12 @@ public class Tools {
 		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
 		System.out.println(ste.getClassName() + " " + ste.getMethodName() + " " + ste.getLineNumber() + ": " + msg);
 	}
+	
+	public static void print(byte[] msg) {
+		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
+		System.out.println(ste.getClassName() + " " + ste.getMethodName() + " " + ste.getLineNumber() + ": " + Tools.byteArrayToString(msg));
+	}
+	
 	public static void printerr(String msg) {
 		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
 		System.err.println(ste.getClassName() + " " + ste.getMethodName() + " " + ste.getLineNumber() + ": " + msg);

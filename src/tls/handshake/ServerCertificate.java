@@ -61,9 +61,8 @@ public class ServerCertificate implements IHandshakeMessage {
 		String cert = new String(certificate, TLSEngine.ENCODING);
 		int serialNumberStart = cert.indexOf(SERIAL_NUMBER_INFO)+SERIAL_NUMBER_INFO.length();
 		int serialNumberEnd = cert.indexOf(NL,serialNumberStart);
-		Tools.print(cert);
 		try {
-		serialNumber = Integer.parseInt(cert.substring(serialNumberStart,serialNumberEnd));
+			serialNumber = Integer.parseInt(cert.substring(serialNumberStart,serialNumberEnd));
 		} catch(NumberFormatException nfe) {
 			serialNumber=-1;
 		}
@@ -99,7 +98,6 @@ public class ServerCertificate implements IHandshakeMessage {
 		publicKeyModulusStart = cert.indexOf(NL, publicKeyModulusStart)+2;
 		int publicKeyModulusEnd = cert.indexOf(NL, publicKeyModulusStart);
 		String publicModulusKey = cert.substring(publicKeyModulusStart, publicKeyModulusEnd);
-		Tools.print(publicKeyModulusStart + " " + publicKeyModulusEnd);
 		int publicExponentKeyStart = cert.indexOf(EXPONENT_INFO)+EXPONENT_INFO.length();
 		int publicExponentKeyEnd = cert.indexOf(NL, publicExponentKeyStart);
 		String publicExponentKey = cert.substring(publicExponentKeyStart, publicExponentKeyEnd);
@@ -127,7 +125,6 @@ public class ServerCertificate implements IHandshakeMessage {
 	
 	@Override
 	public byte[] getByte() {
-		Tools.print(getStringValue());
 		return getStringValue().getBytes(TLSEngine.ENCODING);
 	}
 

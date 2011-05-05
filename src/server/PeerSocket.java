@@ -18,7 +18,7 @@ import common.LogEvent;
 import common.Tools;
 
 public class PeerSocket implements IPeerHost {
-	public static int SOCKET_TIMEOUT = 5000;
+	public static int SOCKET_TIMEOUT = 10000;
 	public static int SOCKET_OPEN_TIMEOUT = 1000;
 	private Socket socket;
 	private InputStream is;

@@ -19,6 +19,8 @@ public class State {
 	private ICompression compressionMethod;
 	private IKeyExchange keyExchangeAlgorithm;
 	
+	private byte[] preMasterSecret = new byte[46];
+	
 	private byte[] masterSecret = new byte[48];
 	private byte[] clientRandom = new byte[32];
 	private byte[] serverRandom = new byte[32];
@@ -224,6 +226,7 @@ public class State {
 
 	private void generateKeys() {
 		// setting up the right size
+		LogEvent keyGeneration = new LogEvent("Generating the key block","");
 		client_write_MAC_key = new byte[getMacAlgorithm().getSize()];
 		server_write_MAC_key = new byte[getMacAlgorithm().getSize()];
 		client_write_encryption_key = new byte[getCipherAlgorithm().getBlockSize()];
@@ -233,31 +236,52 @@ public class State {
 		
 		// the key block has the total sum of all the read and write keys
 		byte[] key_block = new byte[client_write_MAC_key.length*2+client_write_encryption_key.length*2+client_write_IV.length*2];
-		
+		keyGeneration.addDetails("Total size of key block: " + key_block.length);
 		// seed is a concatenation of server random and client random
 		byte[] seed = Tools.byteAppend(getServerRandom(),getClientRandom());
+		keyGeneration.addDetails("The seed (client server and client random concatenation): " + Tools.byteArrayToString(seed));
+		keyGeneration.addDetails("Pre-master secret: " + Tools.byteArrayToString(preMasterSecret));
+		// generate master secret from server random and client random
+		PRF.generate(preMasterSecret, "master secret", seed, masterSecret);
+		keyGeneration.addDetails("Master secret: " + Tools.byteArrayToString(masterSecret));
 		// use the PRF function to fill the key block
-		PRF.generate(getMasterSecret(), "key expansion", seed, key_block);
+		PRF.generate(masterSecret, "key expansion", seed, key_block);
 		int offset = 0;
 		Tools.byteCopy(key_block, client_write_MAC_key, offset);
 		offset += client_write_MAC_key.length;
+		keyGeneration.addDetails("Client write mac key: " + Tools.byteArrayToString(client_write_MAC_key));
 		
 		Tools.byteCopy(key_block, server_write_MAC_key, offset);
 		offset += server_write_MAC_key.length;
+		keyGeneration.addDetails("Server write mac key: " + Tools.byteArrayToString(server_write_MAC_key));
 		
 		Tools.byteCopy(key_block, client_write_encryption_key, offset);
 		offset += client_write_encryption_key.length;
+		keyGeneration.addDetails("Client write encryption key: " + Tools.byteArrayToString(client_write_encryption_key));
 		
 		Tools.byteCopy(key_block, server_write_encryption_key, offset);
 		offset += server_write_encryption_key.length;
+		keyGeneration.addDetails("Server write encryption key: " + Tools.byteArrayToString(server_write_encryption_key));
 		
 		Tools.byteCopy(key_block, client_write_IV, offset);
 		offset += client_write_IV.length;
+		keyGeneration.addDetails("Server write IV: " + Tools.byteArrayToString(client_write_IV));
 		
 		Tools.byteCopy(key_block, server_write_IV, offset);
 		offset += server_write_IV.length;
+		keyGeneration.addDetails("Server write IV: " + Tools.byteArrayToString(server_write_IV));
 		
-		handshakeLog.addDetails("The connection keys are now generated (" + key_block.length + " bytes total)", true);
+		handshakeLog.addLogEvent(keyGeneration);
+	}
+
+
+	public void setPreMasterSecret(byte[] preMasterSecret) {
+		this.preMasterSecret = preMasterSecret;
+	}
+
+
+	public byte[] getPreMasterSecret() {
+		return preMasterSecret;
 	}
 	
 }

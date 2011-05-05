@@ -57,7 +57,7 @@ public class LogEvent {
 	public void addDetails(String details, boolean includeTimeStamp) {
 		if(includeTimeStamp) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(Math.abs((System.currentTimeMillis()-time)/1000));
+			sb.append(Math.abs(System.currentTimeMillis()/time));
 			while(sb.length() < 8)
 				sb.insert(0," ");
 			this.details.append("[" + sb.toString() + "] " + details + NEWLINE);

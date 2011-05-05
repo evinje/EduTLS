@@ -70,7 +70,10 @@ public class TLSEngine {
 		Log.get().add(le);
 		if(!peer.isClient())
 			throw new AlertException(0,0,"WHATTA??");
-		handshake = new TLSHandshake(state);
+		if(handshake==null)
+			handshake = new TLSHandshake(state);
+		else
+			handshake.initNewConnection();
 		send(new TLSRecord(state, handshake.getNextMessage()));
 		int i = 0;
 		Timer timer = new Timer();
@@ -175,6 +178,15 @@ public class TLSEngine {
 		return state;
 	}
 	
+	/**
+	 * Searches through old connection
+	 * states for the given session id, and
+	 * returns the state if found, null
+	 * otherwise
+	 * 
+	 * @params byte[] sessionId, the session id to search for
+	 * @returns State state, null if not found
+	 */
 	public static State findState(byte[] sessionId) {
 		for(State s : states) {
 			if(Tools.compareByteArray(s.getSessionId(), sessionId))
@@ -182,6 +194,16 @@ public class TLSEngine {
 		}
 		return null;
 	}
+	
+	/**
+	 * Searches through old connection
+	 * states to the given peer id, and
+	 * returns the state if found, null
+	 * otherwise
+	 * 
+	 * @params String peerId, the peer id to search for
+	 * @returns State state, null if not found
+	 */
 	public static State findState(String peerId) {
 		for(State s : states) {
 			if(s.getPeerHost().equals(peerId)) {

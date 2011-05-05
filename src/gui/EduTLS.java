@@ -271,7 +271,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		}
 
 		lstModelSessions.add(0, "localhost");
-
+		lstExistingSessions.setSelectedIndex(0);
 		test();
 		repaint();
 	}
@@ -467,8 +467,10 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	 * @returns	Nothing
 	 */
 	private void addConnection(String host) {
-		if(testConnection(host))
+		if(testConnection(host)) {
 			lstModelSessions.add(0, host);
+			lstExistingSessions.setSelectedIndex(0);
+		}
 		else
 			displayMessageBox("Connection could not be established. Please check the host and try again.");
 	}
@@ -476,9 +478,11 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	private void sendMessage(String message) throws AlertException {
 		// TODO: test for active connection, else use localhost
 		try {
+			String host = lstExistingSessions.getSelectedValue().toString();
 			if(engine==null)
-				engine = new TLSEngine(new PeerSocket("localhost"), this);
-
+				engine = new TLSEngine(new PeerSocket(host), this);
+			if(engine.getState().getPeerHost().equals(host))
+				Tools.print("Currently connected to another host..");
 			if(!engine.connect()) {
 				displayMessageBox("Error when connecting to " + engine.getState().getPeerHost());
 				return;

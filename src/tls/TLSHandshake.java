@@ -72,6 +72,14 @@ public class TLSHandshake {
 			clientHandshake();
 	}
 	
+	public void initNewConnection() throws AlertException {
+		type = HELLO_REQUEST;
+		sessionId = state.getSessionId();
+		lastMessage = HELLO_REQUEST;
+		if(state.getEntityType()==ConnectionEnd.Client)
+			clientHandshake();
+	}
+	
 	public boolean isFinished() {
 		return isFinished;
 	}
@@ -166,7 +174,8 @@ public class TLSHandshake {
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Not implemented");
 		case CLIENT_KEY_EXCHANGE:
 			// First message after ServerHelloDone
-			state.addHandshakeLog(new LogEvent("Received ClientKeyExchange",Tools.byteArrayToString(content)));
+			clientKeyExchange = new ClientKeyExchange(content);
+			state.addHandshakeLog(new LogEvent("Received ClientKeyExchange",clientKeyExchange.getStringValue()));
 			if(lastMessage != SERVER_HELLO_DONE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			break;

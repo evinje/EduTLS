@@ -5,10 +5,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import tls.AlertException;
 import tls.ConnectionStates;
 import tls.IApplication;
+import tls.IApplication.STATUS;
 import tls.TLSAlert;
 import tls.TLSEngine;
 import tls.TLSRecord;
@@ -69,6 +72,7 @@ public class Listener implements Runnable {
 		IPeerHost peer;
 		ConnectionStates connectionStates;
 		TLSEngine tlsengine;
+		LogEvent logevent;
 
 		public ConnectionHandler(Socket socket) {
 			this.socket = socket;
@@ -91,27 +95,26 @@ public class Listener implements Runnable {
 					byte[] b = new byte[1];
 					socket.getInputStream().read(b);
 					if(b[0]==CONNECTION_TYPE_TLS) {
-//						Tools.print("New TLS connection incoming...");
 						peer = new PeerSocket(socket);
-						Log.get().add(new LogEvent("Incoming TLS connection from " + peer.getPeerId(),""));
+						logevent = new LogEvent("Incoming TLS connection from " + peer.getPeerId(),"");
+						Log.get().add(logevent);
 						//if(!connectionStates.stateExist(peer.getPeerId()))
 						//connectionStates.addState(tlsengine.getState());
 						tlsengine = new TLSEngine(peer, app);
 						byte[] input = new byte[TLSEngine.RECORD_SIZE];
 						int s = 0;
 						byte[] tmp;
-//						Timer timer = new Timer();
-//						timer.scheduleAtFixedRate(new TimerTask() {
-//							int left = (PeerSocket.SOCKET_TIMEOUT/1000);
-//							@Override
-//							public void run() {
-//								if(left<=0)
-//									this.cancel();
-//								app.getStatus(STATUS.SESSION_TIMEOUT, String.valueOf(left--));
-//								System.out.println(left);
-//							}
-//							
-//						},0,1000);
+						// starting the timer countdown
+						Timer timer = new Timer();
+						timer.scheduleAtFixedRate(new TimerTask() {
+							int left = (PeerSocket.SOCKET_TIMEOUT/1000);
+							@Override
+							public void run() {
+								if(left<=0)
+									this.cancel();
+								app.getStatus(STATUS.SESSION_TIMEOUT, String.valueOf(left--),"");
+							}
+						},0,1000);
 						
 						while(true) {
 							s = socket.getInputStream().read(input);
@@ -134,8 +137,8 @@ public class Listener implements Runnable {
 						}
 					}
 					else if(b[0]==CONNECTION_TYPE_TEST) {
-//						Tools.print("New incoming test");
-						Log.get().add(new LogEvent("Incoming test connection from " + socket.getInetAddress().getHostAddress(),""));
+						logevent = new LogEvent("Incoming test connection from " + socket.getInetAddress().getHostAddress(),"");
+						Log.get().add(logevent);
 						socket.getOutputStream().write(new byte[] { CONNECTION_TYPE_TEST });
 					}
 					else
@@ -143,11 +146,13 @@ public class Listener implements Runnable {
 				}
 			} catch (AlertException e) {
 				try {
+					logevent.addDetails("Alert Exception is thrown; " + e.getMessage(), true);
 					tlsengine.send(new TLSRecord(tlsengine.getState(),new TLSAlert(e.getAlertLevel(), e.getAlertCode())));
 				} catch (AlertException e1) {
 				}
 			} catch (SocketTimeoutException e) {
 				// Timeout socket read, no connection from remote peer
+				logevent.addDetails("No activity, socket is closed", true);
 			} catch (IOException e) {
 				System.err.println("Ooops Socket IOEXception: " + e.getMessage());
 			}
@@ -155,8 +160,8 @@ public class Listener implements Runnable {
 			finally {
 				if(socket != null && socket.isConnected()) {
 					try {
-						Log.get().add(new LogEvent("Closing connection",""));
 						socket.close();
+						logevent.addDetails("Socket has closed",true);
 					} catch (IOException e) {
 						Tools.printerr("" + e.getMessage());
 						e.printStackTrace();

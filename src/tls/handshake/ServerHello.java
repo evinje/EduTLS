@@ -39,7 +39,7 @@ public class ServerHello implements IHandshakeMessage {
 		compression = new byte[0];
 	}
 	
-	public ServerHello(ClientHello clientHello, byte[] serverRandom) {
+	public ServerHello(ClientHello clientHello, byte[] serverRandom) throws AlertException {
 		this.serverRandom = serverRandom;
 		this.clientHello = clientHello;
 		ArrayList<CipherSuite> clientSuites = clientHello.getCipherSuites();
@@ -52,6 +52,8 @@ public class ServerHello implements IHandshakeMessage {
 			if(chosenCipherSuite != null)
 				break;
 		}
+		if(chosenCipherSuite == null)
+			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Did not find any valid cipher suites");
 		sessionId = new byte[TLSHandshake.SESSION_SIZE];
 		compression = new byte[0];
 	}

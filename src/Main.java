@@ -23,8 +23,8 @@ public class Main implements Observer {
 
 	@Override
 	public void update(Observable o, Object arg) {
-		LogEvent le = (LogEvent)arg;
-		Tools.print(le.toString() + " " + le.getDetails());
+//		LogEvent le = (LogEvent)arg;
+//		Tools.print(le.toString() + " " + le.getDetails());
 	}
 
 }

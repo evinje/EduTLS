@@ -1,17 +1,39 @@
 package tls.handshake;
 
+import java.math.BigInteger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 
 import tls.TLSEngine;
 import tls.TLSHandshake;
+
+import common.LogEvent;
 import common.Tools;
+
 import crypto.IKeyExchange;
 
 public class ServerCertificate implements IHandshakeMessage {
-	private static String NL = "";
-	private static int serialNumberCounter = 0;
+	private final static String CERTIFICATE_INFO = "Certificate:";
+	private final static String DATA_INFO = "Data:";
+	private final static String VERSION_INFO = "Version:";
+	private final static String SERIAL_NUMBER_INFO = "Serial Number:";
+	private final static String SIGNATURE_ALG_INFO = "Signature Algorithm:";
+	private final static String ISSUER_INFO = "Issuer:";
+	private final static String VALIDITY_INFO = "Validity:";
+	private final static String VALID_NOT_BEFORE_INFO = "Not Before:";
+	private final static String VALID_NOT_AFTER_INFO = "Not After:";
+	private final static String SUBJECT_INFO = "Subject:";
+	private final static String PUBLIC_KEY_ALG_INFO = "Public Key Algorithm:";
+	private final static String PUBLIC_KEY_INFO = "Public Key";
+	private final static String MODULUS_INFO = "Modulus";
+	private final static String EXPONENT_INFO = "Exponent:";
+	
+	private static final String NL = LogEvent.NEWLINE;
+	private static int serialNumberCounter = 654;
 	private static int versionNumber = 3;
 	private static Object lock = new Object();
 	private String issuer = "CN=EduTLSv2, O=NTNU, L=Trondheim, S=SorTrondelag, C=NO";
@@ -20,18 +42,13 @@ public class ServerCertificate implements IHandshakeMessage {
 	private Date notValidAfter;
 	private int serialNumber;
 	private IKeyExchange key;
+	private GregorianCalendar calendar;
 	
-	public ServerCertificate(byte[] certificate) {
-		int subjectSize = certificate[0];
-		byte[] subjectByte = new byte[subjectSize];
-		Tools.byteCopy(certificate, subjectByte, 1);
-		subject = new String(subjectByte);
-	}
 	
 	public ServerCertificate(String commonName, ServerHello serverHello) {
 		this.subject = "CN=" + commonName;
 		this.key = serverHello.getChosenCipherSuite().getKeyExchange();
-		Calendar calendar = new GregorianCalendar();
+		calendar = new GregorianCalendar();
 		notValidBefore = calendar.getTime();
 		calendar.add(Calendar.MONTH, 1);
 		notValidAfter = calendar.getTime();
@@ -40,70 +57,78 @@ public class ServerCertificate implements IHandshakeMessage {
 		}
 	}
 	
-	/*
-	 Certificate:
-  		Data:
-      		Version: 3 (0x2)
-      Serial Number: 1 (0x1)
-      Signature Algorithm: md5WithRSAEncryption
-      Issuer: C=ZA, ST=Western Cape, L=Cape Town, O=Thawte Consulting cc,
-              OU=Certification Services Division,
-              CN=Thawte Server CA/emailAddress=server-certs@thawte.com
-      Validity
-          Not Before: Aug  1 00:00:00 1996 GMT
-          Not After : Dec 31 23:59:59 2020 GMT
-      Subject: C=ZA, ST=Western Cape, L=Cape Town, O=Thawte Consulting cc,
-               OU=Certification Services Division,
-               CN=Thawte Server CA/emailAddress=server-certs@thawte.com
-      Subject Public Key Info:
-          Public Key Algorithm: rsaEncryption
-          RSA Public Key: (1024 bit)
-              Modulus (1024 bit):
-                  00:d3:a4:50:6e:c8:ff:56:6b:e6:cf:5d:b6:ea:0c:
-                  68:75:47:a2:aa:c2:da:84:25:fc:a8:f4:47:51:da:
-                  85:b5:20:74:94:86:1e:0f:75:c9:e9:08:61:f5:06:
-                  6d:30:6e:15:19:02:e9:52:c0:62:db:4d:99:9e:e2:
-                  6a:0c:44:38:cd:fe:be:e3:64:09:70:c5:fe:b1:6b:
-                  29:b6:2f:49:c8:3b:d4:27:04:25:10:97:2f:e7:90:
-                  6d:c0:28:42:99:d7:4c:43:de:c3:f5:21:6d:54:9f:
-                  5d:c3:58:e1:c0:e4:d9:5b:b0:b8:dc:b4:7b:df:36:
-                  3a:c2:b5:66:22:12:d6:87:0d
-              Exponent: 65537 (0x10001)
-      X509v3 extensions:
-          X509v3 Basic Constraints: critical
-              CA:TRUE
-  Signature Algorithm: md5WithRSAEncryption
-      07:fa:4c:69:5c:fb:95:cc:46:ee:85:83:4d:21:30:8e:ca:d9:
-      a8:6f:49:1a:e6:da:51:e3:60:70:6c:84:61:11:a1:1a:c8:48:
-      3e:59:43:7d:4f:95:3d:a1:8b:b7:0b:62:98:7a:75:8a:dd:88:
-      4e:4e:9e:40:db:a8:cc:32:74:b9:6f:0d:c6:e3:b3:44:0b:d9:
-      8a:6f:9a:29:9b:99:18:28:3b:d1:e3:40:28:9a:5a:3c:d5:b5:
-      e7:20:1b:8b:ca:a4:ab:8d:e9:51:d9:e2:4c:2c:59:a9:da:b9:
-      b2:75:1b:f6:42:f2:ef:c7:f2:18:f9:89:bc:a3:ff:8a:23:2e:
-      70:47
+	public ServerCertificate(byte[] certificate) {
+		String cert = new String(certificate, TLSEngine.ENCODING);
+		int serialNumberStart = cert.indexOf(SERIAL_NUMBER_INFO)+SERIAL_NUMBER_INFO.length();
+		int serialNumberEnd = cert.indexOf(NL,serialNumberStart);
+		Tools.print(cert);
+		try {
+		serialNumber = Integer.parseInt(cert.substring(serialNumberStart,serialNumberEnd));
+		} catch(NumberFormatException nfe) {
+			serialNumber=-1;
+		}
+		int subjectStart = cert.indexOf(SUBJECT_INFO)+SUBJECT_INFO.length();
+		int subjectEnd = cert.indexOf(NL, subjectStart);
+		subject = cert.substring(subjectStart,subjectEnd);
+		int notValidBeforeStart = cert.indexOf(VALID_NOT_BEFORE_INFO)+VALID_NOT_BEFORE_INFO.length();
+		int notValidBeforeEnd = cert.indexOf(NL, notValidBeforeStart);
+		int notValidAfterStart = cert.indexOf(VALID_NOT_AFTER_INFO)+VALID_NOT_AFTER_INFO.length();
+		int notValidAfterEnd = cert.indexOf(NL, notValidAfterStart);
+		calendar = new GregorianCalendar();
+		// Locale.US since month are in english
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.US);
+		/*
+		 * The dates are not important to us. Of course, a invalid date should
+		 * throw an exception in a real environment. It should also
+		 * be checked that "today" is between valid_before and valid_after
 		 */
+		try {
+			notValidBefore = sdf.parse(cert.substring(notValidBeforeStart, notValidBeforeEnd));
+			notValidAfter = sdf.parse(cert.substring(notValidAfterStart, notValidAfterEnd));
+		} catch (ParseException e) {
+			notValidBefore = calendar.getTime();
+			notValidAfter = calendar.getTime();
+		}
+		int keyAlgorithmStart = cert.indexOf(PUBLIC_KEY_ALG_INFO)+PUBLIC_KEY_ALG_INFO.length();
+		int keyAlgorithmEnd = cert.indexOf(NL, keyAlgorithmStart);
+		String keyInf = cert.substring(keyAlgorithmStart, keyAlgorithmEnd);
+		
+		int keyBitLengthStart = cert.indexOf(PUBLIC_KEY_INFO)+PUBLIC_KEY_INFO.length();
+		keyBitLengthStart = cert.indexOf("(",keyBitLengthStart);
+		int publicKeyModulusStart = cert.indexOf(MODULUS_INFO)+MODULUS_INFO.length();
+		publicKeyModulusStart = cert.indexOf(NL, publicKeyModulusStart)+2;
+		int publicKeyModulusEnd = cert.indexOf(NL, publicKeyModulusStart);
+		String publicModulusKey = cert.substring(publicKeyModulusStart, publicKeyModulusEnd);
+		Tools.print(publicKeyModulusStart + " " + publicKeyModulusEnd);
+		int publicExponentKeyStart = cert.indexOf(EXPONENT_INFO)+EXPONENT_INFO.length();
+		int publicExponentKeyEnd = cert.indexOf(NL, publicExponentKeyStart);
+		String publicExponentKey = cert.substring(publicExponentKeyStart, publicExponentKeyEnd);
+		
+		BigInteger intPublicKeyModulus, intPublicExponentKey;
+		try {
+			intPublicKeyModulus = new BigInteger(publicModulusKey);
+			intPublicExponentKey = new BigInteger(publicExponentKey);
+		} catch(Exception e) {
+			intPublicKeyModulus = BigInteger.ZERO;
+			intPublicExponentKey = BigInteger.ZERO;
+		}
+		/*
+		 * If the algorithm is not DH or RSA, we simply ignore it
+		 */
+		if(keyInf.equals(crypto.keyexchange.DH.ALGORITHM_NAME))
+			key = new crypto.keyexchange.DH(intPublicKeyModulus, intPublicExponentKey);
+		else if(keyInf.equals(crypto.keyexchange.RSA.ALGORITHM_NAME))
+			key = new crypto.keyexchange.RSA(intPublicKeyModulus, intPublicExponentKey);
+		else
+			key = new crypto.keyexchange.None();
+		
 
+	}
+	
 	@Override
 	public byte[] getByte() {
-		StringBuilder cert = new StringBuilder();
-		cert.append("Certificate:" + NL);
-		cert.append("Data:" + NL);
-		cert.append("Version:" + versionNumber + NL);
-		cert.append("Serial Number:" + serialNumber + NL);
-		cert.append("Signature Algorithm:" + NL);
-		cert.append("Issuer:" + issuer + NL);
-		cert.append("Validity:" + NL);
-		cert.append("Not Before:" + notValidBefore.toString() + NL);
-		cert.append("Not After:" + notValidAfter.toString() + NL);
-        cert.append("Subject:" + subject + NL);
-        cert.append("Public Key Algorithm:" + key.getAlgorithm() + NL);
-        cert.append("RSA Public Key: (" + key.getPublicKey().bitLength() + " bit)" + NL);
-        cert.append("Modulus (" + key.getPublicModulus().bitLength() + " bit):" + NL);
-        cert.append("" + key.getPublicModulus() + NL);
-        cert.append("Exponent: " + key.getPublicKey() + NL);
-        cert.append("Signature Algorithm: " + NL);
-        cert.append("");
-		return cert.toString().getBytes(TLSEngine.ENCODING);
+		Tools.print(getStringValue());
+		return getStringValue().getBytes(TLSEngine.ENCODING);
 	}
 
 	@Override
@@ -119,22 +144,23 @@ public class ServerCertificate implements IHandshakeMessage {
 	@Override
 	public String getStringValue() {
 		StringBuilder cert = new StringBuilder();
-		cert.append("Certificate:" + NL);
-		cert.append("Data:" + NL);
-		cert.append("Version:" + versionNumber + NL);
-		cert.append("Serial Number:" + serialNumber + NL);
-		cert.append("Signature Algorithm:" + NL);
-		cert.append("Issuer:" + issuer + NL);
-		cert.append("Validity:" + NL);
-		cert.append("Not Before:" + notValidBefore.toString() + NL);
-		cert.append("Not After:" + notValidAfter.toString() + NL);
-        cert.append("Subject:" + subject + NL);
-        cert.append("Public Key Algorithm:" + key.getAlgorithm() + NL);
-        cert.append("RSA Public Key: (" + key.getPublicKey().bitLength() + " bit)" + NL);
-        cert.append("Modulus (" + key.getPublicModulus().bitLength() + " bit):" + NL);
+		cert.append(CERTIFICATE_INFO + NL);
+		cert.append(DATA_INFO + NL);
+		cert.append(VERSION_INFO + versionNumber + NL);
+		cert.append(SERIAL_NUMBER_INFO + serialNumber + NL);
+		cert.append(ISSUER_INFO + issuer + NL);
+		cert.append(VALIDITY_INFO + NL);
+		cert.append(VALID_NOT_BEFORE_INFO + notValidBefore.toString() + NL);
+		cert.append(VALID_NOT_AFTER_INFO + notValidAfter.toString() + NL);
+        cert.append(SUBJECT_INFO + subject + NL);
+        cert.append(PUBLIC_KEY_ALG_INFO + key.getAlgorithm() + NL);
+        cert.append(PUBLIC_KEY_INFO + " (" + key.getPublicKey().bitLength() + " bit):" + NL);
+        cert.append(MODULUS_INFO + " (" + key.getPublicModulus().bitLength() + " bit):" + NL);
         cert.append("" + key.getPublicModulus() + NL);
-        cert.append("Exponent: " + key.getPublicKey() + NL);
-        cert.append("Signature Algorithm: " + NL);
+        cert.append(EXPONENT_INFO + key.getPublicKey() + NL);
+        // TODO: Not key, but CA
+        cert.append(SIGNATURE_ALG_INFO + key.getAlgorithm() + NL);
+        cert.append("");
 		return cert.toString();
 	}
 

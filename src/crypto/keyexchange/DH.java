@@ -5,6 +5,7 @@ import java.util.Random;
 import crypto.IKeyExchange;
 
 public class DH implements IKeyExchange {
+	public final static String ALGORITHM_NAME = "DiffieHellman";
 	// p = prime, g = base/generator
 	BigInteger p, g;
 	// X = private, Y = public
@@ -65,7 +66,7 @@ public class DH implements IKeyExchange {
 
 	@Override
 	public String getAlgorithm() {
-		return "DiffieHellman";
+		return ALGORITHM_NAME;
 	}
 
 	@Override

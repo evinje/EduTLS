@@ -13,6 +13,7 @@ import java.util.Random;
 import common.Tools;
 
 public class RSA implements crypto.IKeyExchange {
+	public final static String ALGORITHM_NAME = "RSA";
 	private BigInteger n, d, e;
 	private static final Random rnd = new Random();
 	/**
@@ -24,7 +25,6 @@ public class RSA implements crypto.IKeyExchange {
 	public RSA(int size) {
 		generateKeys(size);
 	}
-	
 	
 	public RSA(BigInteger modulus, BigInteger pubKey) {
 		this.n = modulus;
@@ -143,7 +143,7 @@ public class RSA implements crypto.IKeyExchange {
 
 	@Override
 	public String getAlgorithm() {
-		return "rsa";
+		return ALGORITHM_NAME;
 	}
 
 	@Override

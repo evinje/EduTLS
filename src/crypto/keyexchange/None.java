@@ -8,17 +8,17 @@ public class None implements crypto.IKeyExchange {
 	
 	@Override
 	public BigInteger getPublicKey() {
-		return null;
+		return BigInteger.ZERO;
 	}
 
 	@Override
 	public BigInteger getPublicModulus() {
-		return null;
+		return BigInteger.ZERO;
 	}
 
 	@Override
 	public String getAlgorithm() {
-		return "";
+		return "None";
 	}
 
 	@Override
@@ -64,6 +64,6 @@ public class None implements crypto.IKeyExchange {
 
 	@Override
 	public BigInteger getSecretKey() {
-		return null;
+		return BigInteger.ZERO;
 	}
 }

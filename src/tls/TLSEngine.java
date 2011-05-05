@@ -150,16 +150,16 @@ public class TLSEngine {
 	 * @throws AlertException
 	 */
 	public synchronized void send(TLSRecord record) throws AlertException {
-		LogEvent le = new LogEvent("Sending TLSRecord","");
-		if(record.getContentType()==APPLICATION)
-			Log.get().add(le);
+//		LogEvent le = new LogEvent("Sending TLSRecord","");
+//		if(record.getContentType()==APPLICATION)
+//			Log.get().add(le);
 		if(!peer.isConnected()) {
-			le.addDetails("Connection lost, reconnecting...");
+//			le.addDetails("Connection lost, reconnecting...");
 			if(!peer.reconnect())
 				throw new AlertException(AlertException.alert_fatal, AlertException.close_notify,"Cannot connect");
-			le.addDetails("Connection established");
+//			le.addDetails("Connection established");
 		}
-		le.addDetails("Sending data: " + Tools.byteArrayToString(record.getCiphertext()));
+//		le.addDetails("Sending data: " + Tools.byteArrayToString(record.getCiphertext()));
 		peer.write(record);
 	}
 	
@@ -178,21 +178,21 @@ public class TLSEngine {
 		ArrayList<CipherSuite> tmpCipherSuites = new ArrayList<CipherSuite>();
 		
 		byte[] value = new byte[] {(byte)0xC0,0x23};
-		IMac sha256 = new crypto.mac.SHA256();
-		IMac sha1 = new crypto.mac.SHA1();
-		ICipher aes = new crypto.cipher.Rijndael();
-		ICompression compression = new crypto.compression.None();
-		IKeyExchange rsa = new crypto.keyexchange.RSA(512);
-		IKeyExchange dh = new crypto.keyexchange.DH(512);
+		crypto.mac.SHA256 sha256 = new crypto.mac.SHA256();
+		crypto.mac.SHA1 sha1 = new crypto.mac.SHA1();
+		crypto.cipher.Rijndael aes = new crypto.cipher.Rijndael();
+		crypto.compression.None compression = new crypto.compression.None();
+		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);
+		crypto.keyexchange.DH dh = new crypto.keyexchange.DH(512);
 		
 		// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
 		String name = "ECDHE_AES256_SHA256";
 		tmpCipherSuites.add(new CipherSuite(name,value, sha256, aes, compression, dh));
 		
 		// TLS_RSA_WITH_AES_256_CBC_SHA
-		name = "RSA_AES256_SHA-1";
+		name = "RSA_AES256_SHA-256";
 		value = new byte[] {0x00, 0x35};
-		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, compression, rsa));
+		tmpCipherSuites.add(new CipherSuite(name, value, sha256, aes, compression, rsa));
 		
 		// TLS_RSA_WITH_AES_128_CBC_SHA
 		name = "RSA_AES128_SHA-1";

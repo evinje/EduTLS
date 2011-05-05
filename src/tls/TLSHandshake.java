@@ -143,7 +143,7 @@ public class TLSHandshake {
 			state.addHandshakeLog(new LogEvent("Received ClientHello",clientHello.getStringValue()));
 			serverHello = new ServerHello(clientHello, serverRandom);
 			responseQueue.add(serverHello);
-			serverCertificate = new ServerCertificate("someNickName", serverHello);
+			serverCertificate = new ServerCertificate(state.getPeerHost(), serverHello);
 			responseQueue.add(serverCertificate);
 			// only if DHE_DSS, DHE_RSA, DH_anon
 			if(serverHello.getChosenCipherSuite().getKeyExchange().requireServerKeyExchange()) {

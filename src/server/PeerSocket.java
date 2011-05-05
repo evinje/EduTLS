@@ -22,6 +22,7 @@ public class PeerSocket implements IPeerHost {
 	private OutputStream os;
 	private String host;
 	private boolean isClient;
+	private static Object lock = new Object();
 
 	public static boolean testConnection(String host) {
 		LogEvent le = new LogEvent("Testing connection to " + host,"");
@@ -156,13 +157,15 @@ public class PeerSocket implements IPeerHost {
 	}
 
 	@Override
-	public synchronized void write(TLSRecord record) {
+	public void write(TLSRecord record) {
 		try {
 			if(!isConnected())
 				reconnect();
-			os.write(record.getCiphertext());
-			os.flush();
-			Thread.sleep(100);
+			synchronized(lock) {
+				os.write(record.getCiphertext());
+				os.flush();
+				Thread.sleep(200);
+			}
 		} catch (IOException e) {
 			Tools.printerr("" + e.getMessage());
 			e.printStackTrace();

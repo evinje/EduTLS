@@ -101,9 +101,9 @@ public class ClientHello implements IHandshakeMessage {
 		String tmp = "Client Random: " + Tools.byteArrayToString(clientRandom) + LogEvent.NEWLINE;
 		tmp += "Session ID: " + Tools.byteArrayToString(sessionId) + LogEvent.NEWLINE;
 		tmp += "Compression method: None" + LogEvent.NEWLINE;
-		tmp += "Cipher Suites: ";
+		tmp += "Cipher Suites: " + LogEvent.NEWLINE;
 		for(CipherSuite s : cipherSuites) {
-			tmp += s.getName() + " ";
+			tmp += LogEvent.INDENT + s.getName() + LogEvent.NEWLINE;
 		}
 		return tmp;
 	}

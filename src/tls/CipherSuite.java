@@ -1,5 +1,7 @@
 package tls;
 
+import common.Tools;
+
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;

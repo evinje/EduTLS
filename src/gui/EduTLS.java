@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
@@ -81,7 +83,9 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		setSize(800, 600);
 		setResizable(false);
 		setVisible(true);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation( DO_NOTHING_ON_CLOSE );  
+		addWindowListener(new ClosingAdapter() );
 		getContentPane().setLayout(null);
 //		logevents = new ArrayList<LogEvent>();
 		Log.get().addObserver(this);
@@ -540,7 +544,16 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		lstLogTree.repaint();
 	}
 
-
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		if(arg1 instanceof LogEvent) {
+			LogEvent el = (LogEvent)arg1;
+			addLog(el);
+		}
+		else
+			Tools.print("WHAT?");
+	}
+	
 	private class ActionListenerImpl implements ActionListener {
 		
 		@Override
@@ -631,13 +644,19 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 
 	}
 
-	@Override
-	public void update(Observable arg0, Object arg1) {
-		if(arg1 instanceof LogEvent) {
-			LogEvent el = (LogEvent)arg1;
-			addLog(el);
-		}
-		else
-			Tools.print("WHAT?");
+	private class ClosingAdapter extends WindowAdapter {  
+		public void windowClosing( WindowEvent e ) {  
+			int option = JOptionPane.showOptionDialog(  
+					EduTLS.this,  
+					"Are you sure you want to quit?",  
+					"Exit Dialog", JOptionPane.YES_NO_OPTION,  
+					JOptionPane.WARNING_MESSAGE, null, null,  
+					null );  
+			if( option == JOptionPane.YES_OPTION ) {
+				
+				Listener.close();
+				System.exit( 0 );  
+			}  
+		} 
 	}
 }

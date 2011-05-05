@@ -12,7 +12,8 @@ import java.util.ArrayList;
  */
 public class LogEvent {
 	public static long APP_START = System.currentTimeMillis();
-	public static String NEWLINE = System.getProperty("line.separator");
+//	public static String NEWLINE = System.getProperty("line.separator");
+	public static String NEWLINE = "\n";
 	public static String INDENT = "     ";
 	private String title;
 	private ArrayList<LogEvent> subLogEvents;

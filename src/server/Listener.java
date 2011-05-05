@@ -25,8 +25,9 @@ public class Listener implements Runnable {
 	public static final int PORT = 12345;
 	public static final byte CONNECTION_TYPE_TEST = '0';
 	public static final byte CONNECTION_TYPE_TLS = '1';
-	private ServerSocket server;
-	private boolean listen;
+	
+	private static ServerSocket server;
+	private static boolean listen;
 	//private ConnectionStates connectionStates;
 	private IApplication app;
 
@@ -56,7 +57,7 @@ public class Listener implements Runnable {
 		}
 	}
 
-	public void close() {
+	public static void close() {
 		listen = false;
 		try {
 			Tools.printerr("Socket closing");
@@ -101,6 +102,7 @@ public class Listener implements Runnable {
 						//if(!connectionStates.stateExist(peer.getPeerId()))
 						//connectionStates.addState(tlsengine.getState());
 						tlsengine = new TLSEngine(peer, app);
+						logevent.addLogEvent(tlsengine.getState().getHandshakeLog());
 						byte[] input = new byte[TLSEngine.RECORD_SIZE];
 						int s = 0;
 						byte[] tmp;

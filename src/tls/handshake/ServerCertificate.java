@@ -63,7 +63,8 @@ public class ServerCertificate implements IHandshakeMessage {
 		int serialNumberEnd = cert.indexOf(NL,serialNumberStart);
 		try {
 			serialNumber = Integer.parseInt(cert.substring(serialNumberStart,serialNumberEnd));
-		} catch(NumberFormatException nfe) {
+		} catch(Exception nfe) {
+			Tools.print("Error SN: start: " + serialNumberStart + " end: " + serialNumberEnd);
 			serialNumber=-1;
 		}
 		int subjectStart = cert.indexOf(SUBJECT_INFO)+SUBJECT_INFO.length();

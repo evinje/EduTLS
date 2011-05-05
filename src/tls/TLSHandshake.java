@@ -175,6 +175,7 @@ public class TLSHandshake {
 		case CLIENT_KEY_EXCHANGE:
 			// First message after ServerHelloDone
 			clientKeyExchange = new ClientKeyExchange(content);
+			state.setPreMasterSecret(clientKeyExchange.getByte());
 			state.addHandshakeLog(new LogEvent("Received ClientKeyExchange",clientKeyExchange.getStringValue()));
 			if(lastMessage != SERVER_HELLO_DONE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
@@ -222,6 +223,7 @@ public class TLSHandshake {
 			if(lastMessage != CLIENT_HELLO)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverHello = new ServerHello(content);
+			state.setServerRandom(serverHello.getServerRandom());
 			if(!Tools.isEmptyByteArray(sessionId) && Tools.compareByteArray(sessionId, serverHello.getSessionId())) {
 				// TODO This is a session resume
 				state.setServerRandom(serverHello.getServerRandom());
@@ -246,6 +248,7 @@ public class TLSHandshake {
 			if(lastMessage != CERTIFICATE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverKeyExchange = new ServerKeyExchange(content);
+			
 			state.addHandshakeLog(new LogEvent("Received ServerKeyExchange",serverKeyExchange.getStringValue()));
 			break;
 		case CERTIFICATE_REQUEST:
@@ -265,6 +268,7 @@ public class TLSHandshake {
 				genRandom(preMasterSecret);
 				clientKeyExchange = new ClientKeyExchange(preMasterSecret);
 			}
+			state.setPreMasterSecret(clientKeyExchange.getByte());
 			responseQueue.add(clientKeyExchange);
 			responseQueue.add(new ChangeCipherSpec());
 			state.setChangeCipherSpecClient();

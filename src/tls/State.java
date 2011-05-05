@@ -239,7 +239,7 @@ public class State {
 		keyGeneration.addDetails("Total size of key block: " + key_block.length);
 		// seed is a concatenation of server random and client random
 		byte[] seed = Tools.byteAppend(getServerRandom(),getClientRandom());
-		keyGeneration.addDetails("The seed (client server and client random concatenation): " + Tools.byteArrayToString(seed));
+		keyGeneration.addDetails("The seed (server random and client random concatenation): " + Tools.byteArrayToString(seed));
 		keyGeneration.addDetails("Pre-master secret: " + Tools.byteArrayToString(preMasterSecret));
 		// generate master secret from server random and client random
 		PRF.generate(preMasterSecret, "master secret", seed, masterSecret);

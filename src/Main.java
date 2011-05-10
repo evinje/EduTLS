@@ -18,13 +18,13 @@ public class Main implements Observer {
 	public Main() {
 		// Add this class as an observer for debugging purposes
 		Log.get().addObserver(this);
-		new server.Listener(new gui.EduTLS());
+		new server.Listener(new gui.ChatGui());
 	}
 
 	@Override
 	public void update(Observable o, Object arg) {
-//		LogEvent le = (LogEvent)arg;
-//		Tools.print(le.toString() + " " + le.getDetails());
+		LogEvent le = (LogEvent)arg;
+		Tools.print(le.toString() + " " + le.getDetails());
 	}
 
 }

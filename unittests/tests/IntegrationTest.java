@@ -1,13 +1,18 @@
 package tests;
 
-import common.Tools;
+import java.util.Observable;
+import java.util.Observer;
 
 import junit.framework.TestCase;
 import server.Listener;
 import server.PeerSocket;
 import tls.TLSEngine;
 
-public class IntegrationTest extends TestCase implements tls.IApplication {
+import common.Log;
+import common.LogEvent;
+import common.Tools;
+
+public class IntegrationTest extends TestCase implements tls.IApplication, Observer {
 
 	private Listener listener;
 	private String messageIn;
@@ -21,6 +26,7 @@ public class IntegrationTest extends TestCase implements tls.IApplication {
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
+		Log.get().addObserver(this);
 		listener = new Listener(this);
 	}
 
@@ -58,5 +64,11 @@ public class IntegrationTest extends TestCase implements tls.IApplication {
 	@Override
 	public void getStatus(STATUS status, String message, String details) {
 		// dont need it..
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		LogEvent le = (LogEvent)arg1;
+		Tools.print(le.toString() + " " + le.getDetails());
 	}
 }

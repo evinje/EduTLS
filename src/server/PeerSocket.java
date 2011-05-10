@@ -18,8 +18,11 @@ import common.LogEvent;
 import common.Tools;
 
 public class PeerSocket implements IPeerHost {
-	public static int SOCKET_TIMEOUT = 10000;
-	public static int SOCKET_OPEN_TIMEOUT = 1000;
+	private static final int SECOND = 1000;
+	public static final int SOCKET_TIMEOUT = 30*SECOND;
+	public static final int SOCKET_OPEN_TIMEOUT = 1*SECOND;
+	public static final int SOCKET_WRITE_SLEEP = 200;
+	
 	private Socket socket;
 	private InputStream is;
 	private OutputStream os;
@@ -27,6 +30,15 @@ public class PeerSocket implements IPeerHost {
 	private boolean isClient;
 	private static Object lock = new Object();
 
+	/**
+	 * This method tests a socket connection
+	 * to a the specified remote host. It opens
+	 * a socket connection with timeout of 
+	 * PeerSocket.SOCKET_OPEN_TIMEOUT ms. 
+	 * 
+	 * @params String host, the host to connect to
+	 * @return boolean whether the test was successful
+	 */
 	public static boolean testConnection(String host) {
 		LogEvent le = new LogEvent("Testing connection to " + host,"");
 		Log.get().add(le);
@@ -56,6 +68,7 @@ public class PeerSocket implements IPeerHost {
 		return true;
 	}
 
+	
 	public PeerSocket(Socket socket) throws IOException {
 		this.socket = socket;
 		this.host = socket.getInetAddress().getHostAddress();
@@ -70,6 +83,7 @@ public class PeerSocket implements IPeerHost {
 		this.os.write(new byte[] { Listener.CONNECTION_TYPE_TLS });
 		this.isClient = true;
 	}
+	
 	
 	public boolean reconnect() {
 		Log.get().add("Reconnecting to " + host,"Connection was lost, starting to reconnect.");
@@ -133,26 +147,6 @@ public class PeerSocket implements IPeerHost {
 					Tools.printerr("SOMETHING IS WRONG!! (" + contentSize + "!=" + size + ")" + Tools.byteArrayToString(input));
 				}
 			}
-//					// TODO: Error handling...
-//					Tools.printerr("More than one: S:" + size + " CS:" + contentSize + " " + Tools.byteArrayToString(input));
-//					int totalReceived = 0;
-//					Tools.print(state.getEntityType() + " " +Tools.byteArrayToString(input));
-//					while(totalReceived < (input.length-TLSEngine.HEADER_SIZE)) {
-//						size = (int)(input[totalReceived+2] & 0xFF)*256 + (int)(input[totalReceived+3] & 0xFF);
-//						size += TLSEngine.HEADER_SIZE;
-//						//Tools.print("size: " + size + " totalreceived:" + totalReceived);
-//						tmp = new byte[size];
-//						Tools.byteCopy(input, tmp, totalReceived, totalReceived+size);
-//						try {
-//							records.add(new TLSRecord(state, tmp));
-//						} catch (AlertException e) {
-//							//Tools.printerr(e.getAlertDescription());
-//						}
-//						totalReceived += size;
-//						//Tools.print("Reveived:" + size);
-//					}
-//				}
-//			}
 		} catch (IOException e) {
 			Tools.print("");
 			e.printStackTrace();
@@ -161,6 +155,17 @@ public class PeerSocket implements IPeerHost {
 		return null;
 	}
 
+	/**
+	 * Writes a TLSRecord to the socket
+	 * it is connected to. If the connection
+	 * has been lost, it reconnects first.
+	 * 
+	 * After a write, it sleeps for 
+	 * PeerSocket.SOCKET_WRITE_SLEEP ms.
+	 * 
+	 * @params TLSRecord record, the record to send
+	 * @return Nothing 
+	 */
 	@Override
 	public void write(TLSRecord record) {
 		try {
@@ -169,7 +174,7 @@ public class PeerSocket implements IPeerHost {
 			synchronized(lock) {
 				os.write(record.getCiphertext());
 				os.flush();
-				Thread.sleep(200);
+				Thread.sleep(SOCKET_WRITE_SLEEP);
 			}
 		} catch (IOException e) {
 			Tools.printerr("" + e.getMessage());

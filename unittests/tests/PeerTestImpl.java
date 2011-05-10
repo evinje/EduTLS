@@ -68,8 +68,7 @@ public class PeerTestImpl implements server.IPeerHost {
 
 	@Override
 	public boolean reconnect() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
    
 }

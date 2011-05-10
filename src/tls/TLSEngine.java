@@ -51,7 +51,6 @@ public class TLSEngine {
 	 * @param app	IApplication, the application utilizing the TLSEngine
 	 * @returns	Nothing, it is a constructor
 	 */
-
 	public TLSEngine(IPeerHost peer, IApplication app) throws AlertException {
 		this.peer = peer;
 		this.app = app;

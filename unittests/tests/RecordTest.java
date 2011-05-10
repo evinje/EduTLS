@@ -25,8 +25,8 @@ public class RecordTest extends TestCase {
 		CipherSuite cipherSuite = new CipherSuite("",null,sha,aes,compress,rsa);
 		byte[] clientRandom = new byte[TLSHandshake.RANDOM_SIZE];
 		byte[] serverRandom = new byte[TLSHandshake.RANDOM_SIZE];
-		TLSHandshake.genRandom(clientRandom);
-		TLSHandshake.genRandom(serverRandom);
+		TLSHandshake.genenerateRandom(clientRandom);
+		TLSHandshake.genenerateRandom(serverRandom);
 		state.setCipherSuite(cipherSuite);
 		state.setClientRandom(clientRandom);
 		state.setServerRandom(serverRandom);
@@ -54,22 +54,6 @@ public class RecordTest extends TestCase {
 		
 		if(!Tools.compareByteArray(ciphertext, ciphertext2))
 			fail("encryption failed");
-		
-		// TODO: Fix fragmentation problem
-		
-//		StringBuilder sb = new StringBuilder();
-//		// Try to exceed the fragment size..
-//		while(sb.length() < TLSEngine.RECORD_SIZE)
-//			sb.append(message);
-//		plaintext = sb.toString().getBytes(TLSEngine.ENCODING);
-//		TLSRecord record3 = new TLSRecord(state);
-//		record3.encrypt(plaintext, ContentType.Application);
-//		byte[] ciphertext3 = record3.getCiphertext();
-//		
-//		TLSRecord record4 = new TLSRecord(state);
-//		record4.decrypt(ciphertext3);
-//		byte[] plaintext4 = record4.toByte();
-//		
 	}
 	
 	public void testErrorCodes() throws IOException, AlertException {

@@ -41,8 +41,6 @@ public class TLSRecord {
 		init();
 		contentType = TLSEngine.ALERT;
 		plaintext = alert.getContent();
-		fragment();
-		encrypt();
 	}
 
 	/**
@@ -54,17 +52,20 @@ public class TLSRecord {
 	public TLSRecord(State state, IHandshakeMessage handshake) {
 		this.state = state;
 		init();
-		//Tools.print(handshake.toString());
 		int tmpMessageSize = handshake.getByte().length;
 		contentType = TLSEngine.HANDSHAKE;
 		byte[] handshakeheader = new byte[TLSEngine.HEADER_SIZE];
 		handshakeheader[0] = handshake.getType();
-		handshakeheader[1] = (byte)Math.ceil(tmpMessageSize/(256*256));
-		handshakeheader[2] = (byte)Math.ceil(tmpMessageSize/256);
-		handshakeheader[3] = (byte)(tmpMessageSize%256);
+		handshakeheader[1] = 0;
+		if(tmpMessageSize<256) {
+			handshakeheader[2] = 0;
+			handshakeheader[3] = (byte)(tmpMessageSize & 0xFF);
+		}
+		else {
+			handshakeheader[2] = (byte)((int)Math.ceil(tmpMessageSize/256) & 0xFF);
+			handshakeheader[3] = (byte)((tmpMessageSize%256) & 0xFF);
+		}
 		plaintext = Tools.byteAppend(handshakeheader, handshake.getByte());
-		fragment();
-		encrypt();
 	}
 
 	/**
@@ -74,7 +75,7 @@ public class TLSRecord {
 	 * @returns	Nothing, it is a constructor
 	 */
 	public TLSRecord(State state, byte[] input) throws AlertException {
-		//Tools.print("New TLSRecord: " + state.getEntityType() + " " +Tools.byteArrayToString(input));
+		Tools.print("New TLSRecord: " + state.getEntityType() + " " +Tools.byteArrayToString(input));
 		this.state = state;
 		int versionNumber;
 		if(input.length < TLSEngine.HEADER_SIZE)
@@ -110,10 +111,23 @@ public class TLSRecord {
 			throw new AlertException(AlertException.alert_fatal,AlertException.illegal_parameter, "Wrong reported content size (" + contentSize + "/" + input.length + ")");
 		}
 		init();
-		ciphertext = new byte[input.length-TLSEngine.HEADER_SIZE];
-		Tools.byteCopy(input, ciphertext, TLSEngine.HEADER_SIZE);
-		defragment();
-		decrypt();
+		if(contentType==TLSEngine.APPLICATION) {
+			int macSize = (state.getMacAlgorithm().getSize()/8);
+			byte[] mac = new byte[macSize];
+			Tools.byteCopy(input, mac, input.length-mac.length);
+			// TODO: Encrypt mac with mac key
+			ciphertext = new byte[input.length-TLSEngine.HEADER_SIZE-macSize];
+			System.arraycopy(input, TLSEngine.HEADER_SIZE, ciphertext, 0, ciphertext.length);
+			byte[] expectedMac = state.getMacAlgorithm().getMac(ciphertext);
+			if(!Tools.compareByteArray(mac, expectedMac))
+				throw new AlertException(AlertException.alert_fatal,AlertException.insufficient_security, "Mac decryption error");
+			defragment();
+			decrypt();			
+		}
+		else {
+			plaintext = new byte[input.length-TLSEngine.HEADER_SIZE];
+			Tools.byteCopy(input, plaintext, TLSEngine.HEADER_SIZE);
+		}
 	}
 
 	public TLSRecord(State state, byte[] plain, byte contentType) {
@@ -139,7 +153,7 @@ public class TLSRecord {
 	public byte getContentType() {
 		return contentType;
 	}
-	
+
 	public String getContentTypeName() {
 		if(contentType == TLSEngine.ALERT)
 			return "Alert";
@@ -151,7 +165,7 @@ public class TLSRecord {
 	}
 
 	private void encrypt() {
-//		Tools.print("Start encrypt: " + tlsplaintext.size() + " " + Tools.byteArrayToString(tlsplaintext.get(0).getPlaintext()));
+		//		Tools.print("Start encrypt: " + tlsplaintext.size() + " " + Tools.byteArrayToString(tlsplaintext.get(0).getPlaintext()));
 		for(int i = 0; i < tlsplaintext.size(); i++) {
 			tlscompressed.add(new TLSCompressed(state, tlsplaintext.get(i)));
 			tlsciphertext.add(new TLSCiphertext(state, tlscompressed.get(i)));
@@ -172,9 +186,9 @@ public class TLSRecord {
 	}
 
 	public byte[] getPlaintext() {
-//		if(plaintext != null && plaintext.length>0)
-//			return plaintext;
-
+		if(contentType != TLSEngine.APPLICATION) {
+			return plaintext;
+		}
 		byte[] tmp = new byte[tlsplaintext.size()*TLSEngine.RECORD_SIZE];
 		int totalSize = 0;
 		for(int i = 0; i < tlsplaintext.size(); i++) {
@@ -184,7 +198,6 @@ public class TLSRecord {
 		plaintext = new byte[totalSize];
 		Tools.byteCopy(tmp, plaintext, 0, plaintext.length);
 		return plaintext;
-
 	}
 
 	public String toString() {
@@ -209,25 +222,30 @@ public class TLSRecord {
 		}
 		return header;
 	}
-	
+
 	public byte[] getCiphertext() {
-//		if(ciphertext != null)
-//			return ciphertext;
-//		if(contentType == TLSEngine.HANDSHAKE)
-//			return Tools.byteAppend(getHeader(plaintext), plaintext);
-		
-		byte[] c = new byte[getNumberOfChunks()*TLSEngine.RECORD_SIZE];
-		
-		int totalSize = 0;
-		for(int i=0; i<getNumberOfChunks(); i++) {
-			Tools.byteCopy(tlsciphertext.get(i).getCipher(), c, TLSEngine.RECORD_SIZE*i);
-			totalSize += tlsciphertext.get(i).getCipher().length;
+		if(contentType==TLSEngine.APPLICATION) {
+			byte[] c = new byte[getNumberOfChunks()*TLSEngine.RECORD_SIZE];
+			int totalSize = 0;
+			for(int i=0; i<getNumberOfChunks(); i++) {
+				Tools.byteCopy(tlsciphertext.get(i).getCipher(), c, TLSEngine.RECORD_SIZE*i);
+				totalSize += tlsciphertext.get(i).getCipher().length;
+			}
+			byte[] cipherNoHeader = new byte[totalSize];
+			Tools.byteCopy(c, cipherNoHeader);
+			// size is reported in bits, not bytes
+			byte[] mac = new byte[state.getMacAlgorithm().getSize()/8];
+			mac = state.getMacAlgorithm().getMac(cipherNoHeader);
+			// TODO: Encrypt mac with mac key
+			byte[] cipherWithMac = new byte[cipherNoHeader.length+mac.length];
+			cipherWithMac = Tools.byteAppend(cipherNoHeader, mac);
+			byte[] header = getHeader(cipherWithMac);
+			ciphertext = Tools.byteAppend(header, cipherWithMac);
+			return ciphertext;
 		}
-		byte[] tmp = new byte[totalSize];
-		Tools.byteCopy(c, tmp);
-		byte[] header = getHeader(tmp);
-		ciphertext = Tools.byteAppend(header, tmp);
-		return ciphertext;
+		byte[] header = getHeader(plaintext);
+		byte[] response = Tools.byteAppend(header, plaintext);
+		return response;
 	}
 
 	public int getNumberOfChunks() {
@@ -256,7 +274,7 @@ public class TLSRecord {
 		int size;
 		int numOfChunks = (int)Math.ceil((float)(ciphertext.length)/TLSEngine.RECORD_SIZE);
 		byte[] tmpChunk;
-		
+
 		for(int i = 0; i < numOfChunks; i++) {
 			tmpChunk = new byte[TLSEngine.FRAGMENT_SIZE];
 			size = TLSEngine.FRAGMENT_SIZE*i;

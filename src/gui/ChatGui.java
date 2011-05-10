@@ -50,7 +50,7 @@ import common.Tools;
  *
  * @author 	Eivind Vinje
  */
-public class EduTLS extends JFrame implements tls.IApplication, Observer {
+public class ChatGui extends JFrame implements tls.IApplication, Observer {
 
 	private static final long serialVersionUID = -7578809751842248888L;
 	public long SYSTEM_START;
@@ -77,7 +77,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	/**
 	 * The Constructor
 	 */
-	public EduTLS() { 
+	public ChatGui() { 
 		super("EduTLS");
 		SYSTEM_START = System.currentTimeMillis();
 		setSize(800, 600);
@@ -269,9 +269,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 			pnlCipherSuites.add(chckbxCipherSuite);
 			i=i+20;
 		}
-
-		lstModelSessions.add(0, "localhost");
-		lstExistingSessions.setSelectedIndex(0);
+		addConnection("localhost",false);
 		test();
 		repaint();
 	}
@@ -467,6 +465,15 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	 * @returns	Nothing
 	 */
 	private void addConnection(String host) {
+		addConnection(host, true);
+	}
+	
+	private void addConnection(String host, boolean testHost) {
+		if(!testHost) {
+			lstModelSessions.add(0, host);
+			lstExistingSessions.setSelectedIndex(0);
+			return;
+		}
 		if(testConnection(host)) {
 			lstModelSessions.add(0, host);
 			lstExistingSessions.setSelectedIndex(0);
@@ -475,13 +482,15 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 			displayMessageBox("Connection could not be established. Please check the host and try again.");
 	}
 
+	private String getCurrentConnection() {
+		return lstExistingSessions.getSelectedValue().toString();
+	}
+	
 	private void sendMessage(String message) throws AlertException {
-		// TODO: test for active connection, else use localhost
 		try {
-			String host = lstExistingSessions.getSelectedValue().toString();
 			if(engine==null)
-				engine = new TLSEngine(new PeerSocket(host), this);
-			if(engine.getState().getPeerHost().equals(host))
+				engine = new TLSEngine(new PeerSocket(getCurrentConnection()), this);
+			if(engine.getState().getPeerHost().equals(getCurrentConnection()))
 				Tools.print("Currently connected to another host..");
 			if(!engine.connect()) {
 				displayMessageBox("Error when connecting to " + engine.getState().getPeerHost());
@@ -503,13 +512,11 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 		}
 
 		engine.send(message.getBytes(TLSEngine.ENCODING));
-		lstModelChat.addElement("me: " + message);
+		lstModelChat.addElement("[me]: " + message);
 	}
 
 	private boolean testConnection(String host) {
-		if(PeerSocket.testConnection(host))
-			return true;
-		return false;
+		return PeerSocket.testConnection(host);
 	}
 
 	private void connectTo(String host) {
@@ -531,13 +538,17 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 
 	@Override
 	public void getMessage(byte[] message) {
-		lstModelChat.addElement("[nick]: " + new String(message, TLSEngine.ENCODING));
+		lstModelChat.addElement("[" + getCurrentConnection() + "]: " + new String(message, TLSEngine.ENCODING));
 	}
 
 	@Override
 	public void getStatus(STATUS type, String message, String details) {
 		if(type==STATUS.SESSION_TIMEOUT)
 			lblSessionTimeout.setText(message + " s");
+		if(type==STATUS.INCOMING_CONNECTION) {
+			addConnection(message, false);
+		}
+			
 	}
 
 	public void addLog(LogEvent le) {
@@ -635,7 +646,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 					LogEvent log = (LogEvent)node.getUserObject();
 					txtLogInfo.setText(log.getDetails());
 					if(log.getSubLogEvents().size()>0) {
-						// TODO open node
+						// TODO open the node?
 						for(LogEvent tmpLog : log.getSubLogEvents())
 							addLog(tmpLog, node);
 					}
@@ -651,7 +662,7 @@ public class EduTLS extends JFrame implements tls.IApplication, Observer {
 	private class ClosingAdapter extends WindowAdapter {  
 		public void windowClosing( WindowEvent e ) {  
 			int option = JOptionPane.showOptionDialog(  
-					EduTLS.this,  
+					ChatGui.this,  
 					"Are you sure you want to quit?",  
 					"Exit Dialog", JOptionPane.YES_NO_OPTION,  
 					JOptionPane.WARNING_MESSAGE, null, null,  

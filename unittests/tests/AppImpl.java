@@ -17,8 +17,7 @@ public class AppImpl implements tls.IApplication {
 
 	@Override
 	public void getStatus(STATUS status, String message, String details) {
-		// TODO Auto-generated method stub
-		
+		// Dont need to do anything with this...
 	}
 
 }

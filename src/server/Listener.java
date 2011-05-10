@@ -102,6 +102,7 @@ public class Listener implements Runnable {
 						//if(!connectionStates.stateExist(peer.getPeerId()))
 						//connectionStates.addState(tlsengine.getState());
 						tlsengine = new TLSEngine(peer, app);
+						app.getStatus(STATUS.INCOMING_CONNECTION, peer.getPeerId(), "");
 						logevent.addLogEvent(tlsengine.getState().getHandshakeLog());
 						byte[] input = new byte[TLSEngine.RECORD_SIZE];
 						int s = 0;
@@ -130,6 +131,8 @@ public class Listener implements Runnable {
 								int totalReceived = 0;
 								while(totalReceived < s) {
 									int size = input[totalReceived+3]+TLSEngine.HEADER_SIZE;
+									if(size<0 || size > TLSEngine.RECORD_SIZE)
+										break;
 									tmp = new byte[size];
 									Tools.byteCopy(input, tmp, totalReceived, totalReceived+size);
 									tlsengine.receive(new TLSRecord(tlsengine.getState(),tmp));

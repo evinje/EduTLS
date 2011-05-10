@@ -32,9 +32,11 @@ public class State {
 	private byte[] client_write_IV;
 	private byte[] server_write_IV;
 	private byte[] sessionId;
+	
 	private IPeerHost peer;
 	private boolean changeCipherSpecClient;
 	private boolean changeCipherSpecServer;
+	private boolean isResumeSession;
 	
 //	private int sequenceNumberOut;
 //	private int sequenceNumberIn;
@@ -43,14 +45,15 @@ public class State {
 	
 	public State(IPeerHost peer) {
 		this.peer = peer;
-		this.cipherAlgorithm = new crypto.cipher.None();
-		this.macAlgorithm = new crypto.mac.None();
-		this.compressionMethod = new crypto.compression.None();
-		this.keyExchangeAlgorithm = new crypto.keyexchange.None();
+		cipherAlgorithm = new crypto.cipher.None();
+		macAlgorithm = new crypto.mac.None();
+		compressionMethod = new crypto.compression.None();
+		keyExchangeAlgorithm = new crypto.keyexchange.None();
 //		this.sequenceNumberOut = 0;
 //		this.sequenceNumberIn = 0;
-		this.changeCipherSpecClient = false;
-		this.changeCipherSpecServer = false;
+		changeCipherSpecClient = false;
+		changeCipherSpecServer = false;
+		isResumeSession = false;
 		handshakeLog = new LogEvent("Initializing connection state","Remote host is " + peer.getPeerId());
 		handshakeLog.addDetails("BulkCipherAlgorithm.null");
 		handshakeLog.addDetails("CompressionMethod.null");
@@ -215,13 +218,17 @@ public class State {
 	}
 	
 	public void resumeSession(State state) {
-		// TODO: Clone state properties
 		cipherAlgorithm = state.getCipherAlgorithm();
 		macAlgorithm = state.getMacAlgorithm();
 		compressionMethod = state.getCompressionMethod();
 		keyExchangeAlgorithm = state.getKeyExchangeAlgorithm();
 		masterSecret = state.getMasterSecret();
+		isResumeSession = true;
 		generateKeys();
+	}
+	
+	public boolean isResumeSession() {
+		return isResumeSession;
 	}
 
 	private void generateKeys() {
@@ -243,6 +250,7 @@ public class State {
 		keyGeneration.addDetails("Pre-master secret: " + Tools.byteArrayToString(preMasterSecret));
 		// generate master secret from server random and client random
 		PRF.generate(preMasterSecret, "master secret", seed, masterSecret);
+		// TODO: Not regenerate master secret if it is in the state resume
 		keyGeneration.addDetails("Master secret: " + Tools.byteArrayToString(masterSecret));
 		// use the PRF function to fill the key block
 		PRF.generate(masterSecret, "key expansion", seed, key_block);

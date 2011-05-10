@@ -49,6 +49,9 @@ public class TLSHandshake {
 	private byte type;
 	private byte[] content;
 	private ArrayList<IHandshakeMessage> responseQueue;
+	// must add all incoming and outgoing (except HELLO_REQUEST)
+	// used to validate the handshake when Finished is sent
+	private ArrayList<IHandshakeMessage> handshakeVerificationMessages;
 	private boolean isFinished = false;
 	
 	private ClientHello clientHello;
@@ -68,11 +71,13 @@ public class TLSHandshake {
 		sessionId = state.getSessionId();
 		lastMessage = HELLO_REQUEST;
 		responseQueue = new ArrayList<IHandshakeMessage>();
+		handshakeVerificationMessages = new ArrayList<IHandshakeMessage>();
 		if(state.getEntityType()==ConnectionEnd.Client)
 			clientHandshake();
 	}
 	
 	public void initNewConnection() throws AlertException {
+		state.addHandshakeLog("Initiazing a new handshake connection");
 		type = HELLO_REQUEST;
 		sessionId = state.getSessionId();
 		lastMessage = HELLO_REQUEST;
@@ -92,7 +97,7 @@ public class TLSHandshake {
 		//this.message = message;
 		//Tools.print("Handshake in: " + Tools.byteArrayToString(message) + " From: " + Thread.currentThread().getStackTrace()[2].getClassName());
 		type = message[0];
-		int contentSize = (int)(message[1] & 0xFF)*256*256 +(int)(message[2] & 0xFF)*256 + (int)(message[3] & 0xFF);
+		int contentSize = (int)(message[2] & 0xFF)*256 + (int)(message[3] & 0xFF);
 		if(contentSize != (message.length-HEADER_SIZE)) {
 			state.addHandshakeLog(new LogEvent("Incoming handshake message error","wrong message size, handshake will abort!"));
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Wrong message size: " + contentSize + " (expected " + (message.length-HEADER_SIZE) + ")");
@@ -121,6 +126,7 @@ public class TLSHandshake {
 		responseQueue.remove(0);
 		// Last message sent from server is the finished message.
 		state.addHandshakeLog(new LogEvent("Sending " + tmpMessage.toString(),tmpMessage.getStringValue()));
+
 		if(state.getEntityType()==ConnectionEnd.Server && tmpMessage.getType()==FINISHED) {
 			isFinished=true;
 			state.addHandshakeLog("Handshake finished, chosen cipher suite: " + serverHello.getChosenCipherSuite().getName());
@@ -135,46 +141,72 @@ public class TLSHandshake {
 			if(lastMessage != HELLO_REQUEST && lastMessage != FINISHED)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected handshake message: " + lastMessage);
 			serverRandom = new byte[RANDOM_SIZE];
-			genRandom(serverRandom);
+			// generates the server random
+			genenerateRandom(serverRandom);
+			// parse the client hello message
 			clientHello = new ClientHello(content);
+			// adds the client hello to handshakemessage log
+			handshakeVerificationMessages.add(clientHello);
+			// logging 
 			state.addHandshakeLog(new LogEvent("Received ClientHello",clientHello.getStringValue()));
+			// creates server hello
 			serverHello = new ServerHello(clientHello, serverRandom);
+			// adds the server hello to handshakemessage log
+			handshakeVerificationMessages.add(serverHello);
+			responseQueue.add(serverHello);
+			// sets the random valies to the current connection state
 			state.setServerRandom(serverRandom);
 			state.setClientRandom(clientHello.getClientRandom());
+			// keep a local copy of session id 
+			sessionId = serverHello.getSessionId();
+			// sets the session id to the connection state
+			state.setSessionId(sessionId);
+			// check if the client requested a session resume
 			if(serverHello.isSessionResume()) {
-				// TODO: Check and set data
+				// it did, must check if its valid
 				State tmpState = TLSEngine.findState(serverHello.getSessionId());
 				if(tmpState != null) {
+					// valid session resume, copy values to current connection state
 					state.resumeSession(tmpState);
 					state.addHandshakeLog("Session resume successful");
+					// skip rest of handshake, jump to change cipher spec
+					responseQueue.add(new ChangeCipherSpec());
+					state.setChangeCipherSpecServer();
+					serverFinished = new Finished(state,handshakeVerificationMessages);
+					responseQueue.add(serverFinished);
+					// no more handshake from server
+					return;
+					
 				}
 				else {
+					// not valid resume
 					state.addHandshakeLog("Session resume failed. Client provided session id, but was not valid");
-					genRandom(sessionId);
+					// generates a new session id, and send it to the client
+					genenerateRandom(sessionId);
 					serverHello.setSessionId(sessionId);
 				}
 			}
-
-			sessionId = serverHello.getSessionId();
-			state.setSessionId(sessionId);
-			responseQueue.add(serverHello);
+			// Send certificate
 			serverCertificate = new ServerCertificate(state.getPeerHost(), serverHello);
 			responseQueue.add(serverCertificate);
-			// only if DHE_DSS, DHE_RSA, DH_anon
+			// Check if chosen cipher suite need server key exchange
+			// message. (only DHE_DSS, DHE_RSA, DH_anon)
 			if(serverHello.getChosenCipherSuite().getKeyExchange().requireServerKeyExchange()) {
 				serverKeyExchange = new ServerKeyExchange(serverHello);
 				responseQueue.add(serverKeyExchange);
 			}
+			// server hello done is the last message from server at this point
 			serverHelloDone = new ServerHelloDone();
 			responseQueue.add(serverHelloDone);
 			break;
 		case CERTIFICATE_VERIFY: 
 			state.addHandshakeLog(new LogEvent("Received CertificateVerify", "Handshake failure, not implemented"));
-			// Only used when Client Certificate is sent
+			// Only used when Client Certificate is sent, not implemented in this application
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Not implemented");
 		case CLIENT_KEY_EXCHANGE:
 			// First message after ServerHelloDone
 			clientKeyExchange = new ClientKeyExchange(content);
+			handshakeVerificationMessages.add(clientKeyExchange);
 			state.setPreMasterSecret(clientKeyExchange.getByte());
 			state.addHandshakeLog(new LogEvent("Received ClientKeyExchange",clientKeyExchange.getStringValue()));
 			if(lastMessage != SERVER_HELLO_DONE)
@@ -191,11 +223,12 @@ public class TLSHandshake {
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			if(!state.getChangeCipherSpecClient())
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Change cipher spec missing");
+			// Change Cipher Spec shall not be in the handshake verification messages
 			responseQueue.add(new ChangeCipherSpec());
-			clientFinished = new Finished(content);
+			clientFinished = new Finished(state, content);
 			state.addHandshakeLog(new LogEvent("Received Finished", clientFinished.getStringValue()));
 			state.setChangeCipherSpecServer();
-			serverFinished = new Finished();
+			serverFinished = new Finished(state, handshakeVerificationMessages);
 			responseQueue.add(serverFinished);
 			break;
 		default:
@@ -209,7 +242,7 @@ public class TLSHandshake {
 		case HELLO_REQUEST:
 			// Server send HelloRequest, Client respond with ClientHello
 			clientRandom = new byte[RANDOM_SIZE];
-			genRandom(clientRandom);
+			genenerateRandom(clientRandom);
 			state.setClientRandom(clientRandom);
 			State tmpState = TLSEngine.findState(state.getPeerHost());
 			if(tmpState != null)
@@ -225,7 +258,6 @@ public class TLSHandshake {
 			serverHello = new ServerHello(content);
 			state.setServerRandom(serverHello.getServerRandom());
 			if(!Tools.isEmptyByteArray(sessionId) && Tools.compareByteArray(sessionId, serverHello.getSessionId())) {
-				// TODO This is a session resume
 				state.setServerRandom(serverHello.getServerRandom());
 				state.resumeSession(TLSEngine.findState(sessionId));
 				state.addHandshakeLog("Session resume successful");
@@ -265,7 +297,7 @@ public class TLSHandshake {
 				clientKeyExchange = new ClientKeyExchange(serverHello.getChosenCipherSuite().getKeyExchange());
 			else {
 				preMasterSecret = new byte[RANDOM_SIZE];
-				genRandom(preMasterSecret);
+				genenerateRandom(preMasterSecret);
 				clientKeyExchange = new ClientKeyExchange(preMasterSecret);
 			}
 			state.setPreMasterSecret(clientKeyExchange.getByte());
@@ -273,7 +305,7 @@ public class TLSHandshake {
 			responseQueue.add(new ChangeCipherSpec());
 			state.setChangeCipherSpecClient();
 			state.setCipherSuite(serverHello.getChosenCipherSuite());
-			clientFinished = new Finished();
+			clientFinished = new Finished(state, handshakeVerificationMessages);
 			responseQueue.add(clientFinished);
 			break;
 		case CHANGE_CIPHER_SPEC:
@@ -286,7 +318,13 @@ public class TLSHandshake {
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			if(!state.getChangeCipherSpecServer())
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Missing change cipher spec");
-			serverFinished = new Finished(content);
+			serverFinished = new Finished(state, content);
+			if(state.isResumeSession()) {
+				responseQueue.add(new ChangeCipherSpec());
+				state.setChangeCipherSpecClient();
+				clientFinished = new Finished(state, handshakeVerificationMessages);
+				responseQueue.add(clientFinished);
+			}
 			isFinished=true;
 			state.addHandshakeLog(new LogEvent("Received Finished", serverFinished.getStringValue()));
 			state.addHandshakeLog("Handshake finished, chosen cipher suite: " + serverHello.getChosenCipherSuite().getName());
@@ -296,7 +334,7 @@ public class TLSHandshake {
 		}
 	}
 
-	public static void genRandom(byte[] input) {
+	public static void genenerateRandom(byte[] input) {
 		sr.nextBytes(input);
 	}
 

@@ -1,14 +1,21 @@
 package tls.handshake;
 
+import java.util.ArrayList;
+
+import tls.State;
+import tls.State.ConnectionEnd;
 import tls.TLSHandshake;
 
 public class Finished implements IHandshakeMessage {
-
-	public Finished() {
-		
+	private State state;
+	
+	public Finished(State state, ArrayList<IHandshakeMessage> messages) {
+		this.state = state;
 	}
-	public Finished(byte[] value) {
+	
+	public Finished(State state, byte[] value) {
 		// TODO: fix this
+		this.state = state;
 	}
 	
 	@Override
@@ -28,7 +35,10 @@ public class Finished implements IHandshakeMessage {
 	}
 	
 	public String getStringValue() {
-		return "not implemented";
+		// PRF(master_secret, finished_label, Hash(handshake_messages))
+		if(state.getEntityType() == ConnectionEnd.Client)
+			return "PRF(master_secret, \"client finished\", Hash(handshake_messages))";
+		return "PRF(master_secret, \"server finished\", Hash(handshake_messages))";
 	}
 	
 }

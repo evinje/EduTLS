@@ -12,6 +12,7 @@ import javax.crypto.NoSuchPaddingException;
 import junit.framework.TestCase;
 
 import common.Tools;
+import crypto.keyexchange.RSA;
 
 public class CryptoTest extends TestCase {
 
@@ -103,6 +104,13 @@ public class CryptoTest extends TestCase {
 		BigInteger secretB = dhB.getSecretKey();
 		
 		assertEquals(secretA.toString(), secretB.toString());
-		
+	}
+	
+	public void testRSA() {
+		crypto.keyexchange.RSA rsa = new RSA(512);
+		BigInteger secret = new BigInteger("1234567890");
+		BigInteger encrypted = rsa.encrypt(secret);
+		BigInteger decrypted = rsa.decrypt(encrypted);
+		assertEquals(secret.toString(), decrypted.toString());
 	}
 }

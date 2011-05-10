@@ -28,7 +28,7 @@ public class ServerHello implements IHandshakeMessage {
 		Tools.byteCopy(serverHello, serverRandom);
 		Tools.byteCopy(serverHello, getSessionId(), TLSHandshake.RANDOM_SIZE);
 		if(Tools.isEmptyByteArray(getSessionId()))
-				TLSHandshake.genRandom(getSessionId());
+				TLSHandshake.genenerateRandom(getSessionId());
 
 		Tools.byteCopy(serverHello, ciphers, TLSHandshake.RANDOM_SIZE +TLSHandshake.SESSION_SIZE);
 		CipherSuite tmpSuite;

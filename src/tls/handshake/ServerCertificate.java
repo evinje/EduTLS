@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
+import tls.CertificateAuthority;
 import tls.TLSEngine;
 import tls.TLSHandshake;
 
@@ -33,9 +34,10 @@ public class ServerCertificate implements IHandshakeMessage {
 	private final static String EXPONENT_INFO = "Exponent:";
 	
 	private static final String NL = LogEvent.NEWLINE;
-	private static int serialNumberCounter = 654;
-	private static int versionNumber = 3;
+	private static int serialNumberCounter = 1;
+	private static int versionNumber = 1;
 	private static Object lock = new Object();
+	private static CertificateAuthority ca = new CertificateAuthority();
 	private String issuer = "CN=EduTLSv2, O=NTNU, L=Trondheim, S=SorTrondelag, C=NO";
 	private String subject = "";
 	private Date notValidBefore;
@@ -156,9 +158,9 @@ public class ServerCertificate implements IHandshakeMessage {
         cert.append(MODULUS_INFO + " (" + key.getPublicModulus().bitLength() + " bit):" + NL);
         cert.append("" + key.getPublicModulus() + NL);
         cert.append(EXPONENT_INFO + key.getPublicKey() + NL);
-        // TODO: Not key, but CA
-        cert.append(SIGNATURE_ALG_INFO + key.getAlgorithm() + NL);
-        cert.append("");
+        String signature = ca.getSignature(cert.toString());
+        cert.append(SIGNATURE_ALG_INFO + ca.getSignatureAlgorithm() + NL);
+        cert.append(signature);
 		return cert.toString();
 	}
 

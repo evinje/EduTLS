@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import tls.State;
 import tls.TLSRecord;
 
-public class PeerTestImpl implements server.IPeerHost {
+public class PeerTestImpl implements server.IPeerCommunicator {
 	//byte[] content;
 	private boolean isClient;
 	ArrayList<TLSRecord> contentQueue;

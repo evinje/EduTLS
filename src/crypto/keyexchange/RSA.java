@@ -10,6 +10,8 @@ package crypto.keyexchange;
 
 import java.math.BigInteger;
 import java.util.Random;
+
+import tls.TLSEngine;
 import common.Tools;
 
 public class RSA implements crypto.IKeyExchange {
@@ -23,8 +25,9 @@ public class RSA implements crypto.IKeyExchange {
 	 * @returns	Nothing
 	 */
 	public RSA(int size) {
-		generateKeys(size);
+		initKeys(size);
 	}
+	
 	
 	public RSA(BigInteger modulus, BigInteger pubKey) {
 		this.n = modulus;
@@ -45,8 +48,9 @@ public class RSA implements crypto.IKeyExchange {
 		this.d = privKey;
 	}
 	
-	private void  generateKeys(int size) {
-		if(size<0)
+	@Override
+	public void initKeys(int size) {
+		if(size<=0)
 			return;
 		//Globals.log.add("Starting to generate a " + size + " bits RSA key pair", Log.TYPE.INIT, "Generating random numbers and use the Miller–Rabin primality test to check whether it's a prime or not");
 		StringBuilder primeGenLog = new StringBuilder();
@@ -105,11 +109,11 @@ public class RSA implements crypto.IKeyExchange {
 	}
 
 	public BigInteger decrypt(String message) {
-		return decrypt(new BigInteger(message.getBytes()));
+		return decrypt(new BigInteger(message.getBytes(TLSEngine.ENCODING)));
 	}
 	
 	public BigInteger encrypt(String message) {
-		return encrypt(new BigInteger(message.getBytes()));
+		return encrypt(new BigInteger(message.getBytes(TLSEngine.ENCODING)));
 	}
 	
 	@Override
@@ -134,6 +138,10 @@ public class RSA implements crypto.IKeyExchange {
 //		return p;
 //		}
 	
+	@Override
+	public void setYb(BigInteger yb) {
+		encrypt(yb);
+	}
 	
 	@Override
 	public BigInteger getSecretKey() {

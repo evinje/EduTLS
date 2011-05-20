@@ -2,9 +2,11 @@ package crypto.keyexchange;
 
 import java.math.BigInteger;
 import java.util.Random;
+
 import crypto.IKeyExchange;
 
 public class DH implements IKeyExchange {
+	
 	public final static String ALGORITHM_NAME = "DiffieHellman";
 	// p = prime, g = base/generator
 	BigInteger p, g;
@@ -16,23 +18,16 @@ public class DH implements IKeyExchange {
 	Random rnd;
 
 	public DH(int bitLength) {
+		initKeys(bitLength);
+	}
+	
+	public void initKeys(int bitLength) {
 		// pre-generated p and g
 		g = new BigInteger("7013892680988498279188554023449657170451011019571822843525388197555796586834894509532314177249376660084062463676554469138711964180514384717777200947267417");
 		p = new BigInteger("7468600078466426114796463824125526412203106612609790292466106804957294177866776167499103011102236201812549527633940659531011732848077078911342294621247679");
 		rnd = new Random();
 		Xa = new BigInteger(bitLength, rnd);
 		Ya = g.modPow(Xa,p);
-//		AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator.getInstance("DH");
-//		paramGen.init(512);
-//		AlgorithmParameters params = paramGen.generateParameters();
-//		DHParameterSpec dhSkipParamSpec = (DHParameterSpec)params.getParameterSpec(DHParameterSpec.class);
-//		KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
-//        aliceKpairGen.initialize(dhSkipParamSpec);
-//        KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
-//        KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");
-//        aliceKeyAgree.init(aliceKpair.getPrivate());
-//        Tools.print(dhSkipParamSpec.getG().toString());
-//        Tools.print(dhSkipParamSpec.getP().toString());
 	}
 	
 	

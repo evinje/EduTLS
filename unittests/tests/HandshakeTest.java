@@ -1,14 +1,20 @@
 package tests;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+
+import common.Tools;
 
 import junit.framework.TestCase;
 import tls.AlertException;
 import tls.Certificate;
+import tls.CipherSuite;
 import tls.State;
+import tls.TLSEngine;
 import tls.TLSHandshake;
 import tls.handshake.ClientHello;
 import tls.handshake.IHandshakeMessage;
+import tls.handshake.ServerHello;
 
 public class HandshakeTest extends TestCase {
 	State state;
@@ -90,7 +96,7 @@ public class HandshakeTest extends TestCase {
 		ClientHello clientHello;
 		// try to create an invalid client hello
 		try {
-			clientHello = new ClientHello(new byte[] {}, new byte[] {}, null);
+			clientHello = new ClientHello(new byte[] {}, new byte[] {});
 			fail("No exception thrown");
 		} catch (AlertException e) {
 			if(e.getAlertCode() != AlertException.handshake_failure)
@@ -98,26 +104,30 @@ public class HandshakeTest extends TestCase {
 		}
 		byte[] clientRandom = new byte[] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 		byte[] sessionId = new byte[TLSHandshake.SESSION_SIZE];
-		clientHello = new ClientHello(clientRandom, sessionId, null);
-//		if(clientHello.getCipherSuites().size() != Globals.cipherSuites.size())
-//			fail("Not same size of cipher suites");
-//		byte[] clientHelloExpected = new byte[] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-64,35,0,53,0,47};
-//		if(!Tools.compareByteArray(clientHello.getByte(), clientHelloExpected))
-//			fail("Client Hello not as expected");
+		clientHello = new ClientHello(clientRandom, sessionId);
+		if(clientHello.getCipherSuites().size() != TLSEngine.allCipherSuites.size())
+			fail("Not same size of cipher suites");
+		assertEquals(TLSHandshake.CLIENT_HELLO, clientHello.getType());
+		assertEquals(Tools.byteArrayToString(clientHello.getClientRandom()),Tools.byteArrayToString(clientRandom));
+		
+		ClientHello clientHelloClone = new ClientHello(clientHello.getByte());
+		assertEquals(clientHello.getStringValue(), clientHelloClone.getStringValue());
 	}
 	
-//	public void testServerHello() throws AlertException {
-//		ClientHello clientHello;
-//		int cipherSuiteIndex = Globals.cipherSuites.size()-1;
-//		byte[] clientRandom = new byte[] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-//		byte[] serverRandom = new byte[] {9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9};
-//		byte[] sessionId = new byte[] {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
-//		ArrayList<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
-//		cipherSuites.add(Globals.cipherSuites.get(cipherSuiteIndex));
-//		clientHello = new ClientHello(clientRandom, sessionId, cipherSuites);
-//		ServerHello serverHello = new ServerHello(clientHello, serverRandom);
-//		assertEquals(serverHello.getChosenCipherSuite(), Globals.cipherSuites.get(cipherSuiteIndex));
-//	}
+	public void testServerHello() throws AlertException {
+		ClientHello clientHello;
+		TLSEngine.allCipherSuites.get(0).setEnabled(false);
+		byte[] clientRandom = new byte[] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+		byte[] serverRandom = new byte[] {9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9};
+		byte[] sessionId = new byte[] {7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
+		ArrayList<CipherSuite> cipherSuites = new ArrayList<CipherSuite>();
+		
+		clientHello = new ClientHello(clientRandom, sessionId);
+		ServerHello serverHello = new ServerHello(clientHello, serverRandom);
+		assertEquals(serverHello.getChosenCipherSuite(), TLSEngine.allCipherSuites.get(1));
+		ServerHello serverHelloClone = new ServerHello(serverHello.getByte());
+		assertEquals(serverHello.getStringValue(), serverHelloClone.getStringValue());
+	}
 
 	public void testCertificate() throws UnsupportedEncodingException, AlertException {
 		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);

@@ -6,32 +6,28 @@ import crypto.IKeyExchange;
 import crypto.IMac;
 
 public class CipherSuite {
-	
-	private static final byte[] TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 = {(byte)0xc0,0x23};
-	private static final byte[] TLS_RSA_WITH_AES_256_CBC_SHA = { 0x00, 0x35 };
-	private static final byte[] TLS_RSA_WITH_AES_128_CBC_SHA = { 0x00, 0x2F };
-	
-	public static final byte[][] CIPHER_SUITE = {
-		TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-		TLS_RSA_WITH_AES_256_CBC_SHA,
-		TLS_RSA_WITH_AES_128_CBC_SHA};
-	
 	private IMac macAlg;
-	private ICompression compressionAlg;
 	private ICipher cipherAlg;
 	private IKeyExchange keyExchangeAlg;
 	private String name;
-	private byte[] value;
+	private byte value;
 	
 	private boolean isEnabled;
 	
-	public CipherSuite(String name, byte[] value, IMac mac, ICipher cipher, ICompression compression, IKeyExchange keyExchange) {
+	/**
+	 * @param name String, name of the cipher suite
+	 * @param value byte, the byte value of the cipher suite
+	 * @param mac IMac, the mac algorithm
+	 * @param cipher ICipher, the cipher algorithm
+	 * @param keyEx IKeyexchange, the key exchange algorithm
+	 * @param compAlg ICompression, the compression algorithm
+	 */
+	public CipherSuite(String name, byte value, IMac mac, ICipher cipher, IKeyExchange keyEx) {
 		this.name = name;
 		this.value = value;
 		this.macAlg = mac;
 		this.cipherAlg = cipher;
-		this.compressionAlg = compression;
-		this.keyExchangeAlg = keyExchange;
+		this.keyExchangeAlg = keyEx;
 		isEnabled = true;
 	}
 	
@@ -51,15 +47,11 @@ public class CipherSuite {
 		return macAlg;
 	}
 
-	public ICompression getCompression() {
-		return compressionAlg;
-	}
-	
 	public String getName() {
 		return name;
 	}
 	
-	public byte[] getValue() {
+	public byte getValue() {
 		return value;
 	}
 	
@@ -70,4 +62,5 @@ public class CipherSuite {
 	public ICipher getCipher() {
 		return cipherAlg;
 	}
+
 }

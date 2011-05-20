@@ -12,4 +12,9 @@ public class None implements crypto.IMac {
 		return 0;
 	}
 
+	@Override
+	public String getName() {
+		return "None";
+	}
+
 }

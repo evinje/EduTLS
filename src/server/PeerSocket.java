@@ -17,7 +17,7 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
-public class PeerSocket implements IPeerHost {
+public class PeerSocket implements IPeerCommunicator {
 	private static final int SECOND = 1000;
 	public static final int SOCKET_TIMEOUT = 30*SECOND;
 	public static final int SOCKET_OPEN_TIMEOUT = 1*SECOND;
@@ -169,9 +169,9 @@ public class PeerSocket implements IPeerHost {
 	@Override
 	public void write(TLSRecord record) {
 		try {
-			if(!isConnected())
-				reconnect();
 			synchronized(lock) {
+				if(!socket.isConnected())
+					reconnect();
 				os.write(record.getCiphertext());
 				os.flush();
 				Thread.sleep(SOCKET_WRITE_SLEEP);

@@ -216,6 +216,7 @@ public class TLSHandshake {
 			state.addHandshakeLog(new LogEvent("Received ChangeCipherSpec", Tools.byteArrayToString(content)));
 			state.setChangeCipherSpecClient();
 			state.setCipherSuite(serverHello.getChosenCipherSuite());
+			state.setCompressionMethod(serverHello.getChosenCompressionMethod());
 			break;
 		case FINISHED:
 			// Client send Finished, Server respond with [ChangeCipherSpec] and Finished
@@ -247,7 +248,7 @@ public class TLSHandshake {
 			State tmpState = TLSEngine.findState(state.getPeerHost());
 			if(tmpState != null)
 				sessionId = tmpState.getSessionId();
-			clientHello = new ClientHello(clientRandom, sessionId, TLSEngine.allCipherSuites);
+			clientHello = new ClientHello(clientRandom, sessionId);
 			responseQueue.add(clientHello);
 			break;
 		case SERVER_HELLO:
@@ -305,6 +306,7 @@ public class TLSHandshake {
 			responseQueue.add(new ChangeCipherSpec());
 			state.setChangeCipherSpecClient();
 			state.setCipherSuite(serverHello.getChosenCipherSuite());
+			state.setCompressionMethod(serverHello.getChosenCompressionMethod());
 			clientFinished = new Finished(state, handshakeVerificationMessages);
 			responseQueue.add(clientFinished);
 			break;

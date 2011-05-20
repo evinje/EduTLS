@@ -6,17 +6,12 @@ public class None implements crypto.ICipher {
 
 	@Override
 	public int getBlockSize() {
-		return 0;
-	}
-
-	@Override
-	public byte[] encrypt(byte[] input) {
-		return input;
+		return 16;
 	}
 
 	@Override
 	public String getAlgorithmName() {
-		return "";
+		return "None";
 	}
 
 	@Override

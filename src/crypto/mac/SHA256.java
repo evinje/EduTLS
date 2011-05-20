@@ -154,4 +154,11 @@ public class SHA256 implements crypto.IMac {
 	}
 
 
+
+	@Override
+	public String getName() {
+		return "SHA-256";
+	}
+
+
 }

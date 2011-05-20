@@ -1,6 +1,6 @@
 package tls;
 
-import server.IPeerHost;
+import server.IPeerCommunicator;
 
 import common.LogEvent;
 import common.Tools;
@@ -14,13 +14,10 @@ import crypto.PRF;
 public class State {
 	public static enum ConnectionEnd { Server, Client }
 	
-	private ICipher cipherAlgorithm;
-	private IMac macAlgorithm;
+	private CipherSuite cipherSuite;
 	private ICompression compressionMethod;
-	private IKeyExchange keyExchangeAlgorithm;
 	
 	private byte[] preMasterSecret = new byte[46];
-	
 	private byte[] masterSecret = new byte[48];
 	private byte[] clientRandom = new byte[32];
 	private byte[] serverRandom = new byte[32];
@@ -33,30 +30,24 @@ public class State {
 	private byte[] server_write_IV;
 	private byte[] sessionId;
 	
-	private IPeerHost peer;
+	private IPeerCommunicator peer;
 	private boolean changeCipherSpecClient;
 	private boolean changeCipherSpecServer;
 	private boolean isResumeSession;
-	
-//	private int sequenceNumberOut;
-//	private int sequenceNumberIn;
-	
+
 	private LogEvent handshakeLog;
 	
-	public State(IPeerHost peer) {
+	public State(IPeerCommunicator peer) {
 		this.peer = peer;
-		cipherAlgorithm = new crypto.cipher.None();
-		macAlgorithm = new crypto.mac.None();
+		cipherSuite = new CipherSuite("NONE",(byte)0x0,
+				new crypto.mac.None(),
+				new crypto.cipher.None(),
+				new crypto.keyexchange.None());
 		compressionMethod = new crypto.compression.None();
-		keyExchangeAlgorithm = new crypto.keyexchange.None();
-//		this.sequenceNumberOut = 0;
-//		this.sequenceNumberIn = 0;
 		changeCipherSpecClient = false;
 		changeCipherSpecServer = false;
 		isResumeSession = false;
 		handshakeLog = new LogEvent("Initializing connection state","Remote host is " + peer.getPeerId());
-		handshakeLog.addDetails("BulkCipherAlgorithm.null");
-		handshakeLog.addDetails("CompressionMethod.null");
 		setSessionId(new byte[TLSHandshake.SESSION_SIZE]);
 	}
 	
@@ -86,15 +77,6 @@ public class State {
 	public String getPeerHost() {
 		return peer.getPeerId();
 	}
-	
-//	public int getSequenceNumberOut() {
-//		return sequenceNumberOut++;
-//	}
-//	
-//	public int getSequenceNumberIn() {
-//		return sequenceNumberIn++;
-//	}
-
 
 	public ConnectionEnd getEntityType() {
 		return getEntityType(false);
@@ -111,49 +93,31 @@ public class State {
 	}
 
 	public void setCipherSuite(CipherSuite cipherSuite) {
-		this.cipherAlgorithm = cipherSuite.getCipher();
-		this.keyExchangeAlgorithm = cipherSuite.getKeyExchange();
-		this.macAlgorithm = cipherSuite.getMac();
-		this.compressionMethod = cipherSuite.getCompression();
+		this.cipherSuite = cipherSuite;
 		handshakeLog.addDetails("Cipher Suite has been changed; " + cipherSuite.getName(), true);
 		generateKeys();
 	}
-	
-//	public void setCipherAlgorithm(ICipher cipherAlgorithm) {
-//		this.cipherAlgorithm = cipherAlgorithm;
-//	}
 
 	public ICipher getCipherAlgorithm() {
-		return cipherAlgorithm;
+		return cipherSuite.getCipher();
 	}
-	
-//	public void setKeyExchangeAlgorithm(IKeyExchange keyExchangeAlgorithm) {
-//		this.keyExchangeAlgorithm = keyExchangeAlgorithm;
-//	}
 	
 	public IKeyExchange getKeyExchangeAlgorithm() {
-		return keyExchangeAlgorithm;
+		return cipherSuite.getKeyExchange();
 	}
-
-//	public void setMacAlgorithm(IMac macAlgorithm) {
-//		this.macAlgorithm = macAlgorithm;
-//	}
 
 	public IMac getMacAlgorithm() {
-		return macAlgorithm;
+		return cipherSuite.getMac();
 	}
 
-//	public void setCompressionMethod(ICompression compressionMethod) {
-//		this.compressionMethod = compressionMethod;
-//	}
+	public void setCompressionMethod(ICompression compressionMethod) {
+		this.compressionMethod = compressionMethod;
+		handshakeLog.addDetails("Compression method has been changed; " + compressionMethod.getName(), true);
+	}
 
 	public ICompression getCompressionMethod() {
 		return compressionMethod;
 	}
-//
-//	public void setMasterSecret(byte[] masterSecret) {
-//		this.masterSecret = masterSecret;
-//	}
 
 	public byte[] getMasterSecret() {
 		return masterSecret;
@@ -217,12 +181,13 @@ public class State {
 		return sessionId;
 	}
 	
+	public CipherSuite getCipherSuite() {
+		return cipherSuite;
+	}
+	
 	public void resumeSession(State state) {
-		cipherAlgorithm = state.getCipherAlgorithm();
-		macAlgorithm = state.getMacAlgorithm();
-		compressionMethod = state.getCompressionMethod();
-		keyExchangeAlgorithm = state.getKeyExchangeAlgorithm();
-		masterSecret = state.getMasterSecret();
+		this.cipherSuite = state.getCipherSuite();
+		preMasterSecret = state.getPreMasterSecret();
 		isResumeSession = true;
 		generateKeys();
 	}
@@ -247,37 +212,37 @@ public class State {
 		// seed is a concatenation of server random and client random
 		byte[] seed = Tools.byteAppend(getServerRandom(),getClientRandom());
 		keyGeneration.addDetails("The seed (server random and client random concatenation): " + Tools.byteArrayToString(seed));
-		keyGeneration.addDetails("Pre-master secret: " + Tools.byteArrayToString(preMasterSecret));
+		keyGeneration.addDetails("Pre-master secret (" + preMasterSecret.length + " bytes): " + Tools.byteArrayToString(preMasterSecret));
 		// generate master secret from server random and client random
 		PRF.generate(preMasterSecret, "master secret", seed, masterSecret);
 		// TODO: Not regenerate master secret if it is in the state resume
-		keyGeneration.addDetails("Master secret: " + Tools.byteArrayToString(masterSecret));
+		keyGeneration.addDetails("Master secret (" + masterSecret.length + " bytes): " + Tools.byteArrayToString(masterSecret));
 		// use the PRF function to fill the key block
 		PRF.generate(masterSecret, "key expansion", seed, key_block);
 		int offset = 0;
 		Tools.byteCopy(key_block, client_write_MAC_key, offset);
 		offset += client_write_MAC_key.length;
-		keyGeneration.addDetails("Client write mac key: " + Tools.byteArrayToString(client_write_MAC_key));
+		keyGeneration.addDetails("Client write mac key (" + client_write_MAC_key.length + " bytes): " + Tools.byteArrayToString(client_write_MAC_key));
 		
 		Tools.byteCopy(key_block, server_write_MAC_key, offset);
 		offset += server_write_MAC_key.length;
-		keyGeneration.addDetails("Server write mac key: " + Tools.byteArrayToString(server_write_MAC_key));
+		keyGeneration.addDetails("Server write mac key (" + server_write_MAC_key.length + " bytes): " + Tools.byteArrayToString(server_write_MAC_key));
 		
 		Tools.byteCopy(key_block, client_write_encryption_key, offset);
 		offset += client_write_encryption_key.length;
-		keyGeneration.addDetails("Client write encryption key: " + Tools.byteArrayToString(client_write_encryption_key));
+		keyGeneration.addDetails("Client write encryption key (" + client_write_encryption_key.length + " bytes): " + Tools.byteArrayToString(client_write_encryption_key));
 		
 		Tools.byteCopy(key_block, server_write_encryption_key, offset);
 		offset += server_write_encryption_key.length;
-		keyGeneration.addDetails("Server write encryption key: " + Tools.byteArrayToString(server_write_encryption_key));
+		keyGeneration.addDetails("Server write encryption key (" + server_write_encryption_key.length + " bytes): " + Tools.byteArrayToString(server_write_encryption_key));
 		
 		Tools.byteCopy(key_block, client_write_IV, offset);
 		offset += client_write_IV.length;
-		keyGeneration.addDetails("Server write IV: " + Tools.byteArrayToString(client_write_IV));
+		keyGeneration.addDetails("Cliejnt write IV (" + client_write_IV.length + " bytes): " + Tools.byteArrayToString(client_write_IV));
 		
 		Tools.byteCopy(key_block, server_write_IV, offset);
 		offset += server_write_IV.length;
-		keyGeneration.addDetails("Server write IV: " + Tools.byteArrayToString(server_write_IV));
+		keyGeneration.addDetails("Server write IV (" + server_write_IV.length + " bytes): " + Tools.byteArrayToString(server_write_IV));
 		
 		handshakeLog.addLogEvent(keyGeneration);
 	}

@@ -19,8 +19,6 @@ public class TLSCompressed {
 		Tools.byteCopy(plaintext.getPlaintext(), uncompressed);
 		contentType = plaintext.getContentType();
 		compress();
-//		Tools.print("Uncompressed: " + Tools.byteArrayToString(uncompressed));
-//		Tools.print("Compressed: " + Tools.byteArrayToString(compressed));
 	}
 	
 	public TLSCompressed(State state, TLSCiphertext ciphertext) {
@@ -33,9 +31,12 @@ public class TLSCompressed {
 	
 	private void compress() {
 		compressed = state.getCompressionMethod().compress(uncompressed);
+		Tools.print(uncompressed);
+		Tools.print(compressed);
 	}
 	
 	private void decompress() {
+		Tools.print(compressed);
 		uncompressed = state.getCompressionMethod().decompress(compressed);
 	}
 	

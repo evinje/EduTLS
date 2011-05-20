@@ -16,13 +16,13 @@ import crypto.mac.SHA1;
 
 public class RecordTest extends TestCase {
 	
-	public void testKeyGen() throws Exception {
+	public void testCipher() throws Exception {
 		State state = new State(new PeerTestImpl());
 		Rijndael aes = new Rijndael();
 		SHA1 sha = new SHA1();
 		crypto.compression.None compress = new crypto.compression.None();
 		crypto.keyexchange.None rsa = new crypto.keyexchange.None();
-		CipherSuite cipherSuite = new CipherSuite("",null,sha,aes,compress,rsa);
+		CipherSuite cipherSuite = new CipherSuite("",(byte)0x1,sha,aes,rsa);
 		byte[] clientRandom = new byte[TLSHandshake.RANDOM_SIZE];
 		byte[] serverRandom = new byte[TLSHandshake.RANDOM_SIZE];
 		TLSHandshake.genenerateRandom(clientRandom);

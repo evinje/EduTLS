@@ -508,7 +508,7 @@ public class Rijndael implements crypto.ICipher {
 
 	 public final String getAlgorithmName()
 	 {
-		 return "AES";
+		 return "Rijndael";
 	 }
 
 	 public final int getBlockSize()

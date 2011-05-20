@@ -73,7 +73,7 @@ public class CountLineNumbers {
 		while (input.hasNextLine()) {
 			in = input.nextLine();
 			in = in.trim();
-			if(!in.equals("") && !in.startsWith("/") && !in.startsWith("*"))
+//			if(!in.equals("") && !in.startsWith("/") && !in.startsWith("*"))
 				count++;
 		}
 		return count;

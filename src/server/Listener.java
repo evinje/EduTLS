@@ -60,7 +60,6 @@ public class Listener implements Runnable {
 	public static void close() {
 		listen = false;
 		try {
-			Tools.printerr("Socket closing");
 			if(server != null && !server.isClosed())
 				server.close();
 		} catch (IOException e) {
@@ -70,7 +69,7 @@ public class Listener implements Runnable {
 
 	public class ConnectionHandler implements Runnable {
 		Socket socket;
-		IPeerHost peer;
+		IPeerCommunicator peer;
 		ConnectionStates connectionStates;
 		TLSEngine tlsengine;
 		LogEvent logevent;

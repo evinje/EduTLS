@@ -66,7 +66,7 @@ import common.Tools;
  *
  * @version $Revision: 1.9 $
  */
-public final class Rijndael2 {
+public final class Rijndael2 implements crypto.ICipher {
 
 	// Debugging methods and variables
 	// -------------------------------------------------------------------------
@@ -87,6 +87,9 @@ public final class Rijndael2 {
 
 	private static final int DEFAULT_BLOCK_SIZE = 16; // in bytes
 	private static final int DEFAULT_KEY_SIZE = 16; // in bytes
+	private Object key;
+	private boolean forEncryption;
+	
 	private static final String SS =
 		"\u637C\u777B\uF26B\u6FC5\u3001\u672B\uFED7\uAB76" +
 		"\uCA82\uC97D\uFA59\u47F0\uADD4\uA2AF\u9CA4\u72C0" +
@@ -778,6 +781,36 @@ public final class Rijndael2 {
 		} else {
 			rijndaelDecrypt(in, i, out, j, k, bs);
 		}
+	}
+
+	@Override
+	public int getBlockSize() {
+		return DEFAULT_BLOCK_SIZE;
+	}
+
+
+	@Override
+	public void cipher(byte[] input, int inOff, byte[] output, int outOff) {
+		if(forEncryption)
+			encrypt(input, inOff, output, outOff, key, DEFAULT_BLOCK_SIZE);
+		else
+			decrypt(input, inOff, output, outOff, key, DEFAULT_BLOCK_SIZE);
+	}
+
+	@Override
+	public String getAlgorithmName() {
+		return "Rijndael2";
+	}
+
+	@Override
+	public void init(boolean forEncryption, byte[] newkey) {
+		this.forEncryption = forEncryption;
+		try {
+			key = makeKey(newkey, DEFAULT_BLOCK_SIZE);
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 

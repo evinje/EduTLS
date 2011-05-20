@@ -66,4 +66,14 @@ public class None implements crypto.IKeyExchange {
 	public BigInteger getSecretKey() {
 		return BigInteger.ZERO;
 	}
+
+	@Override
+	public void initKeys(int size) {
+		
+	}
+
+	@Override
+	public void setYb(BigInteger yb) {
+		
+	}
 }

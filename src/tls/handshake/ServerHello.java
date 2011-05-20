@@ -10,10 +10,12 @@ import tls.TLSHandshake;
 import common.LogEvent;
 import common.Tools;
 
+import crypto.ICompression;
+
 public class ServerHello implements IHandshakeMessage {
 	private byte[] serverRandom;
 	private byte[] sessionId;
-	private byte[] compression;
+	private ICompression chosenCompressionMethod;
 	private CipherSuite chosenCipherSuite;
 	private ClientHello clientHello;
 	private boolean sessionResume = false;
@@ -22,18 +24,21 @@ public class ServerHello implements IHandshakeMessage {
 		serverRandom = new byte[TLSHandshake.RANDOM_SIZE];
 		setSessionId(new byte[TLSHandshake.SESSION_SIZE]);
 
-		byte[] ciphers = new byte[serverHello.length - TLSHandshake.SESSION_SIZE - TLSHandshake.RANDOM_SIZE];
-		if(ciphers.length%2 != 0)
-			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Invalid length");
+		
+		int offset = 0;
 		Tools.byteCopy(serverHello, serverRandom);
-		Tools.byteCopy(serverHello, getSessionId(), TLSHandshake.RANDOM_SIZE);
+		offset += serverRandom.length;
+		Tools.byteCopy(serverHello, getSessionId(), offset);
+		offset += getSessionId().length;
 		if(Tools.isEmptyByteArray(getSessionId()))
 				TLSHandshake.genenerateRandom(getSessionId());
 
-		Tools.byteCopy(serverHello, ciphers, TLSHandshake.RANDOM_SIZE +TLSHandshake.SESSION_SIZE);
+		byte[] cipher = new byte[1];
+		Tools.byteCopy(serverHello, cipher, offset);
+		offset += 1;
 		CipherSuite tmpSuite;
-		for(int i = 0; i < (ciphers.length/2); i++) {
-			tmpSuite = TLSEngine.findCipherSuite(new byte[] {ciphers[2*i],ciphers[2*i+1]});
+		for(int i = 0; i < cipher.length; i++) {
+			tmpSuite = TLSEngine.findCipherSuite(cipher[i]);
 			if(tmpSuite != null && tmpSuite.isEnabled()) {
 				chosenCipherSuite = tmpSuite;
 				break;
@@ -41,17 +46,20 @@ public class ServerHello implements IHandshakeMessage {
 		}
 		if(chosenCipherSuite == null)
 			throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Did not find any valid cipher suites");
-		compression = new byte[0];
+		
+		for(ICompression comp : ICompression.allCompressionMethods)
+			if(serverHello[serverHello.length-1] == comp.getCompressionId())
+				chosenCompressionMethod = comp;
 	}
 	
 	public ServerHello(ClientHello clientHello, byte[] serverRandom) throws AlertException {
 		this.serverRandom = serverRandom;
 		this.clientHello = clientHello;
 		ArrayList<CipherSuite> clientSuites = clientHello.getCipherSuites();
-		for(CipherSuite serverCS : TLSEngine.allCipherSuites) {
-			for(CipherSuite clientCS : clientSuites) {
-				if(Tools.compareByteArray(clientCS.getValue(), serverCS.getValue()) && clientCS.isEnabled()) {
-					chosenCipherSuite = serverCS;
+		for(CipherSuite serverSuite : TLSEngine.allCipherSuites) {
+			for(CipherSuite clientSuite : clientSuites) {
+				if((clientSuite.getValue() == serverSuite.getValue()) && clientSuite.isEnabled()) {
+					chosenCipherSuite = serverSuite;
 				}
 			}
 			if(chosenCipherSuite != null)
@@ -65,11 +73,22 @@ public class ServerHello implements IHandshakeMessage {
 			setSessionId(clientHello.getSessionId());
 			sessionResume = true;
 		}
-		compression = new byte[0];
+		for(ICompression clientComp : clientHello.getCompressionMethods()) {
+			// This actually loops through every compression method 
+			// and chooses the last one.
+			for(ICompression serverComp : ICompression.allCompressionMethods)
+				if(clientComp.getCompressionId() == serverComp.getCompressionId())
+					chosenCompressionMethod = clientComp;
+		}
+		
 	}
 	
 	public CipherSuite getChosenCipherSuite() {
 		return chosenCipherSuite;
+	}
+	
+	public ICompression getChosenCompressionMethod() {
+		return chosenCompressionMethod;
 	}
 	
 	public byte[] getClientRandom() {
@@ -78,17 +97,16 @@ public class ServerHello implements IHandshakeMessage {
 
 	@Override
 	public byte[] getByte() {
-		byte[] ciphers = chosenCipherSuite.getValue();
-		int size = TLSHandshake.RANDOM_SIZE + TLSHandshake.SESSION_SIZE + ciphers.length + compression.length;
+		int size = TLSHandshake.RANDOM_SIZE + TLSHandshake.SESSION_SIZE + 2;
 		byte[] content = new byte[size];
 		int offset = 0;
 		Tools.byteCopy(serverRandom, content, offset);
 		offset += serverRandom.length;
 		Tools.byteCopy(getSessionId(), content, offset);
 		offset += getSessionId().length;
-		Tools.byteCopy(ciphers, content, offset);
-		offset += ciphers.length;
-		Tools.byteCopy(compression, content, offset);
+		content[offset] = chosenCipherSuite.getValue();
+		offset += 1;
+		content[offset] = chosenCompressionMethod.getCompressionId(); 
 		return content;
 	}
 
@@ -106,7 +124,7 @@ public class ServerHello implements IHandshakeMessage {
 	public String getStringValue() {
 		String tmp = "Server Random: " + Tools.byteArrayToString(serverRandom) + LogEvent.NEWLINE;
 		tmp += "Session ID: " + Tools.byteArrayToString(getSessionId()) + LogEvent.NEWLINE;
-		tmp += "Compression method: None" + LogEvent.NEWLINE;
+		tmp += "Compression method: " + chosenCompressionMethod.getName() + LogEvent.NEWLINE;
 		tmp += "Chosen Cipher Suite: " + chosenCipherSuite.getName();
 		return tmp;
 	}

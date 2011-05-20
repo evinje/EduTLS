@@ -9,7 +9,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.security.InvalidKeyException;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -44,6 +43,11 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
+import crypto.ICipher;
+import crypto.ICompression;
+import crypto.IKeyExchange;
+import crypto.IMac;
+
 /**
  * The graphical user interface
  * of the EduTLS application
@@ -73,6 +77,7 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 	private DefaultMutableTreeNode treeRootNode;
 	private JTree lstLogTree;
 	private DefaultTreeModel lstLogTreeModel;
+	private JLabel lblActiveCipherSuite;
 	
 	/**
 	 * The Constructor
@@ -174,80 +179,75 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlLogDetailedInfo.add(txtLogInfo);
 
 
-		JPanel pnlSettingsArea = new JPanel();
-		pnlSettingsArea.setBorder(BorderFactory.createTitledBorder("Settings"));
-		pnlSettingsArea.setBounds(10, 11, 182, 352);
-		getContentPane().add(pnlSettingsArea);
-		pnlSettingsArea.setLayout(null);
+		JPanel pnlConnectionsArea = new JPanel();
+		pnlConnectionsArea.setBorder(BorderFactory.createTitledBorder("Connections"));
+		pnlConnectionsArea.setBounds(10, 11, 182, 352);
+		getContentPane().add(pnlConnectionsArea);
+		pnlConnectionsArea.setLayout(null);
 
 		JLabel lblEnterHostname = new JLabel("Enter hostname:");
 		lblEnterHostname.setBounds(10, 21, 162, 14);
-		pnlSettingsArea.add(lblEnterHostname);
+		pnlConnectionsArea.add(lblEnterHostname);
 
 		txtAddConnection = new JTextField();
 		txtAddConnection.setBorder(txtBorder);
 		txtAddConnection.setBounds(10, 46, 92, 20);
-		pnlSettingsArea.add(txtAddConnection);
+		pnlConnectionsArea.add(txtAddConnection);
 		txtAddConnection.setColumns(10);
 
 		btnAddConnection = new JButton("Add");
 		btnAddConnection.setBounds(111, 45, 61, 23);
 		btnAddConnection.addActionListener(new ActionListenerImpl());
-		pnlSettingsArea.add(btnAddConnection);
+		pnlConnectionsArea.add(btnAddConnection);
 
 		JLabel lblExistingSessions = new JLabel("Existing sessions:");
 		lblExistingSessions.setBounds(10, 90, 162, 14);
-		pnlSettingsArea.add(lblExistingSessions);
+		pnlConnectionsArea.add(lblExistingSessions);
 
 		JSeparator separator = new JSeparator();
 		separator.setBounds(10, 77, 162, 2);
-		pnlSettingsArea.add(separator);
+		pnlConnectionsArea.add(separator);
 
 		JLabel lblChosenCipherSuite = new JLabel("Active cipher suite:");
 		lblChosenCipherSuite.setBounds(10, 249, 162, 14);
-		pnlSettingsArea.add(lblChosenCipherSuite);
+		pnlConnectionsArea.add(lblChosenCipherSuite);
 		lblChosenCipherSuite.setEnabled(false);
 
-		JLabel lblActiveCipherSuite = new JLabel("");
+		lblActiveCipherSuite = new JLabel("");
 		lblActiveCipherSuite.setEnabled(false);
 		lblActiveCipherSuite.setBounds(10, 274, 162, 67);
-		pnlSettingsArea.add(lblActiveCipherSuite);
-
-		//		JList lstSettings = new JList();
-		//		lstSettings.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		//		lstSettings.setBounds(10, 103, pnlSettingsArea.getWidth(), pnlSettingsArea.getHeight());
-		//		pnlSettingsArea.add(new JScrollPane(lstSettings));
+		pnlConnectionsArea.add(lblActiveCipherSuite);
 
 		JSeparator separator_1 = new JSeparator();
 		separator_1.setBounds(10, 237, 162, 2);
-		pnlSettingsArea.add(separator_1);
+		pnlConnectionsArea.add(separator_1);
 
 		lstModelSessions = new DefaultListModel();
 		lstExistingSessions = new JList(lstModelSessions);
 		lstExistingSessions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		//lstExistingSessions.setCellRenderer(new ListRenderer());
-		lstExistingSessions.setBounds(10, 124, pnlSettingsArea.getWidth()-20, 100);
+		lstExistingSessions.setBounds(10, 124, pnlConnectionsArea.getWidth()-20, 100);
 		lstExistingSessions.setPrototypeCellValue("Index 12");
 		lstExistingSessions.addMouseListener(new ListAction());
-		pnlSettingsArea.add((lstExistingSessions));
+		pnlConnectionsArea.add((lstExistingSessions));
 
 		JLabel lblSessionTimeoutInfo = new JLabel("Session timeout:");
 		lblSessionTimeoutInfo.setBounds(10, 327, 110, 14);
-		pnlSettingsArea.add(lblSessionTimeoutInfo);
+		pnlConnectionsArea.add(lblSessionTimeoutInfo);
 
 		lblSessionTimeout = new JLabel("");
 		lblSessionTimeout.setBounds(130, 327, 46, 14);
-		pnlSettingsArea.add(lblSessionTimeout);
+		pnlConnectionsArea.add(lblSessionTimeout);
 
-		JPanel pnlToolsArea = new JPanel();
-		pnlToolsArea.setBorder(BorderFactory.createTitledBorder("Tools"));
-		pnlToolsArea.setBounds(10, 373, 182, 178);
-		getContentPane().add(pnlToolsArea);
-		pnlToolsArea.setLayout(null);
+		JPanel pnlSettingsArea = new JPanel();
+		pnlSettingsArea.setBorder(BorderFactory.createTitledBorder("Settings & Tools"));
+		pnlSettingsArea.setBounds(10, 373, 182, 178);
+		getContentPane().add(pnlSettingsArea);
+		pnlSettingsArea.setLayout(null);
 
 		JPanel pnlCipherSuites = new JPanel();
 		pnlCipherSuites.setBounds(10, 20, 162, 113);
-		pnlToolsArea.add(pnlCipherSuites);
+		pnlSettingsArea.add(pnlCipherSuites);
 		pnlCipherSuites.setLayout(null);
 
 		JLabel lblCipherSuites = new JLabel("Cipher suites:");
@@ -255,19 +255,34 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		lblCipherSuites.setBounds(0, 0, 142, 14);
 		pnlCipherSuites.add(lblCipherSuites);
 		btnPerformance = new JButton("Performance");
-		btnPerformance.setBounds(10, 144, 162, 23);
+		btnPerformance.setBounds(10, 146, 162, 23);
 		btnPerformance.addActionListener(new ActionListenerImpl());
-		pnlToolsArea.add(btnPerformance);
+		pnlSettingsArea.add(btnPerformance);
 
-		int i = 20;
+		int i = 17;
 		for(CipherSuite s : TLSEngine.allCipherSuites) {
-			JCheckBox chckbxCipherSuite = new JCheckBox(s.getName());
-			chckbxCipherSuite.setToolTipText(s.getName());
-			chckbxCipherSuite.setBounds(0, i, 160, 20);
-			chckbxCipherSuite.setSelected(true);
-			chckbxCipherSuite.addActionListener(new ActionListenerImpl());
-			pnlCipherSuites.add(chckbxCipherSuite);
+			JCheckBox cbxCipherSuite = new JCheckBox(s.getName());
+			cbxCipherSuite.setToolTipText(s.getName());
+			cbxCipherSuite.setBounds(0, i, 160, 20);
+			cbxCipherSuite.setSelected(s.isEnabled());
+			cbxCipherSuite.addActionListener(new ActionListenerImpl());
+			pnlCipherSuites.add(cbxCipherSuite);
 			i=i+20;
+		}
+		JLabel lblCompMethod = new JLabel("Compression methods:");
+		lblCompMethod.setBounds(0, i, 160, 20);
+		pnlCipherSuites.add(lblCompMethod);
+		i=i+20;
+		
+		for(ICompression comp : ICompression.allCompressionMethods) {
+			if(!comp.getName().equals("None")) {
+				JCheckBox cbxCompression = new JCheckBox(comp.getName());
+				cbxCompression.setSelected(comp.isEnabled());
+				cbxCompression.addActionListener(new ActionListenerImpl());
+				cbxCompression.setBounds(0, i, 160, 20);
+				pnlCipherSuites.add(cbxCompression);
+				i=i+20;
+			}
 		}
 		addConnection("localhost",false);
 		test();
@@ -280,167 +295,131 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		LogEvent performanceTest = new LogEvent("Performance test","Tests performance of the various cryptographic components");
 		Log.get().add(performanceTest);
 		// TEST KEY EXCHANGE
-		int numOfTests = 50;
-		LogEvent logKeyExchange = new LogEvent("Performance test of key exchange","");
+		int numOfTests = 500;
+		LogEvent logKeyExchange = new LogEvent("Performance test of key exchange algorithms","");
 		performanceTest.addLogEvent(logKeyExchange);
-		crypto.keyexchange.DH diffie1;
-		crypto.keyexchange.DH diffie2;
+		logKeyExchange.addDetails("Performing " + numOfTests + " tests of key exchange algorithms and one key pair generation");
 		long testStart = System.currentTimeMillis();
-		diffie1 = new crypto.keyexchange.DH(512);
-		diffie2 = new crypto.keyexchange.DH(512);
-		logKeyExchange.addDetails("Two Diffie-Hellman certificates generated in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (with pre-generated G and P)");
-		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			diffie1.setYb(diffie2.getPublicKey());
-			diffie2.setYb(diffie1.getPublicKey());
-			//le.addDetails("Diffie-Hellman key exchange " + i);
+		for(IKeyExchange ke : IKeyExchange.allKeyExchangeAlgorithms) {
+			testStart = System.currentTimeMillis();
+			ke.initKeys(512);
+			logKeyExchange.addDetails("Generated 512 bits " + ke.getAlgorithm() + " keys in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				ke.setYb(ke.getPublicKey());
+			}
+			logKeyExchange.addDetails("Algorithm: " + ke.getAlgorithm() + " in " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 		}
-		logKeyExchange.addDetails(numOfTests + " Diffie-Hellman tests in " + Math.abs(System.currentTimeMillis()-testStart) + " ms (two encryptions)");
-		crypto.keyexchange.RSA rivest1;
-		crypto.keyexchange.RSA rivest2;
-
-		testStart = System.currentTimeMillis();
-		rivest1 = new crypto.keyexchange.RSA(512);
-		rivest2 = new crypto.keyexchange.RSA(512);
-		logKeyExchange.addDetails("Two Rivest-Shamir-Adleman certificates generated in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (with no pre-defined values, all primes generated with miller-rabin prime test)");
-		for(int i = 0; i < numOfTests; i++) {
-			rivest1.encrypt(rivest2.getPublicKey());
-			rivest2.encrypt(rivest1.getPublicKey());
-			//le.addDetails("Rivest-Shamir-Adleman key exchange " + i);
-		}
-		logKeyExchange.addDetails(numOfTests + " Rivest-Shamir-Adleman tests in " + Math.abs(System.currentTimeMillis()-testStart) + " ms (two encryptions)");
-
 		// TEST HASH FUNCTIONS
-		LogEvent logSha = new LogEvent("Performance test of hash functions","");
-		performanceTest.addLogEvent(logSha);
-		numOfTests = 500;
-		crypto.mac.SHA1 sha1;
-		String tmpString;
+		LogEvent logMac = new LogEvent("Performance test of hash functions","");
+		performanceTest.addLogEvent(logMac);
+		numOfTests = 5000;
+		logMac.addDetails("Performing " + numOfTests + " hash tests");		
 		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			sha1 = new crypto.mac.SHA1();
-			tmpString = "test number " + i;
-			sha1.getMac(tmpString.getBytes());
+		for(IMac mac : IMac.allMacAlgorithms) {
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				mac.getMac(createBytes(16,i));
+			}
+			logMac.addDetails("Algorithm: " + mac.getName() + " (16 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				mac.getMac(createBytes(512,i));
+			}
+			logMac.addDetails("Algorithm: " + mac.getName() + " (512 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				mac.getMac(createBytes(16384,i));
+			}
+			logMac.addDetails("Algorithm: " + mac.getName() + " (16384 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 		}
-		logSha.addDetails(numOfTests + " SHA-1 tests in " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
-		crypto.mac.SHA256 sha256;
+		// TEST HASH FUNCTIONS
+		LogEvent logCompr = new LogEvent("Performance test of compression methods","");
+		performanceTest.addLogEvent(logCompr);
+		numOfTests = 1000;
+		logCompr.addDetails("Performing " + numOfTests + " compression tests (compress and decompress)");		
 		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			sha256 = new crypto.mac.SHA256();
-			tmpString = "test number " + i;
-			sha256.getMac(tmpString.getBytes());
+		byte[] tmpBytes = new byte[0];
+		for(ICompression comp : ICompression.allCompressionMethods) {
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				tmpBytes = comp.compress(createBytes(16,i));
+				comp.decompress(tmpBytes);
+			}
+			double ratio = (1-tmpBytes.length/(double)16)*100;
+			logCompr.addDetails("Algorithm: " + comp.getName() + " (16 bytes, " + ratio + "% compression ratio) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				tmpBytes = comp.compress(createBytes(512,i));
+				comp.decompress(tmpBytes);
+			}
+			ratio = (1-tmpBytes.length/(double)512)*100;
+			logCompr.addDetails("Algorithm: " + comp.getName() + " (512 bytes, " + ratio + "% compression ratio) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				tmpBytes = comp.compress(createBytes(16384,i));
+				comp.decompress(tmpBytes);
+			}
+			ratio = (1-tmpBytes.length/(double)16384)*100;
+			logCompr.addDetails("Algorithm: " + comp.getName() + " (16384 bytes, " + ratio + "% compression ratio) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 		}
-		logSha.addDetails(numOfTests + " SHA-256 tests in " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
-
-		LogEvent logCipher = new LogEvent("Performance test of conventional encryption","");
+		
+		LogEvent logCipher = new LogEvent("Performance test of encryption algorithms","");
 		performanceTest.addLogEvent(logCipher);
-		numOfTests = 500;
-
-
-		crypto.cipher.Rijndael aes = new crypto.cipher.Rijndael();
+		numOfTests = 5000;
+		logCipher.addDetails("Performing " + numOfTests + " encryption and decryption tests");		
 		byte[] key = new byte[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 		byte[] tmpByte=null, text, plain;
 		byte[][] res=null;
+		for(ICipher cipher : ICipher.allCipherAlgorithms) {
+			int blocks=0, rest;
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				int bs = cipher.getBlockSize();
+				cipher.init(true, key);
+				tmpByte = createBytes(512,i);
+				rest = (bs-(tmpByte.length%bs));
+				text = new byte[tmpByte.length+rest];
+				System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
+				plain = new byte[text.length];
+				blocks = (int)Math.ceil(text.length/bs);
+				res = new byte[blocks][bs];
+				byte[] tmp = new byte[bs];
+				cipher.init(true, key);
+				for(int j = 0; j < blocks; j++) {
+					System.arraycopy(text, j*bs, tmp, 0, bs);
+					cipher.cipher(tmp, 0, res[j], 0);
+				}
+				cipher.init(false, key);
+				for(int j = 0; j < blocks; j++) {
+					cipher.cipher(res[j], 0, plain, j*bs);
+				}
+			}
+			logCipher.addDetails("Algorithm: " + cipher.getAlgorithmName() + " (512 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			testStart = System.currentTimeMillis();
+			for(int i = 0; i < numOfTests; i++) {
+				tmpByte =  createBytes(4028,i);
+				rest = (16-(tmpByte.length%16));
+				text = new byte[tmpByte.length+rest];
+				System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
+				plain = new byte[text.length];
+				blocks = (int)Math.ceil(text.length/16);
+				res = new byte[blocks][16];
+				byte[] tmp = new byte[16];
+				cipher.init(true, key);
+				for(int j = 0; j < blocks; j++) {
+					System.arraycopy(text, j*16, tmp, 0, 16);
+					cipher.cipher(tmp, 0, res[j], 0);
+				}
+				//			System.out.println("test " + i);
+				cipher.init(false, key);
+				for(int j = 0; j < blocks; j++) {
+					cipher.cipher(res[j], 0, plain, j*16);
+				}
+			}
+			logCipher.addDetails("Algorithm: " + cipher.getAlgorithmName() + " (4028 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 
-		int blocks=0, rest;
-		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			aes.init(true, key);
-			tmpString = "test number " + i;
-			tmpByte = tmpString.getBytes();
-			rest = (16-(tmpByte.length%16));
-			text = new byte[tmpByte.length+rest];
-			System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
-			plain = new byte[text.length];
-			blocks = (int)Math.ceil(text.length/16);
-			res = new byte[blocks][16];
-			byte[] tmp = new byte[16];
-			for(int j = 0; j < blocks; j++) {
-				System.arraycopy(text, j*16, tmp, 0, 16);
-				aes.processBlock(tmp, 0, res[j], 0);
-			}
-			//			System.out.println("test " + i);
-			aes.init(false, key);
-			for(int j = 0; j < blocks; j++) {
-				aes.processBlock(res[j], 0, plain, j*16);
-			}
 		}
-		logCipher.addDetails(numOfTests + " Rijndael (implementation one) encryption and decryption in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (" + tmpByte.length + " bytes)");
-
-		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			tmpString = "test number " + i + " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddd";
-			tmpByte = tmpString.getBytes();
-			rest = (16-(tmpByte.length%16));
-			text = new byte[tmpByte.length+rest];
-			System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
-			plain = new byte[text.length];
-			blocks = (int)Math.ceil(text.length/16);
-			res = new byte[blocks][16];
-			byte[] tmp = new byte[16];
-			for(int j = 0; j < blocks; j++) {
-				System.arraycopy(text, j*16, tmp, 0, 16);
-				aes.processBlock(tmp, 0, res[j], 0);
-			}
-			//			System.out.println("test " + i);
-			aes.init(false, key);
-			for(int j = 0; j < blocks; j++) {
-				aes.processBlock(res[j], 0, plain, j*16);
-			}
-		}
-		logCipher.addDetails(numOfTests + " Rijndael (implementation one) encryption and decryption in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (" + tmpByte.length + " bytes)");
-
-		crypto.cipher.Rijndael2 aes2 = new crypto.cipher.Rijndael2();
-
-		Object aesKey=null;
-		try {
-			aesKey = aes2.makeKey(key, 16);
-		} catch (InvalidKeyException e) {
-			logCipher.addDetails("Error when creating key for Rijndael implementation number two");
-			btnPerformance.setEnabled(true);
-			return;
-		}
-		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			tmpString = "test number " + i;
-			tmpByte = tmpString.getBytes();
-			rest = (16-(tmpByte.length%16));
-			text = new byte[tmpByte.length+rest];
-			System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
-			plain = new byte[text.length];
-			blocks = (int)Math.ceil(text.length/16);
-			res = new byte[blocks][16];
-			byte[] tmp = new byte[16];
-			for(int j = 0; j < blocks; j++) {
-				System.arraycopy(text, j*16, tmp, 0, 16);
-				aes2.encrypt(tmp, 0, res[j], 0, aesKey, 16);
-			}
-			for(int j = 0; j < blocks; j++) {
-				aes2.decrypt(res[j], 0, plain, j*16, aesKey, 16);
-			}
-		}
-		logCipher.addDetails(numOfTests + " Rijndael (implementation two) encryption and decryption in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (" + tmpByte.length + " bytes)");
-
-		testStart = System.currentTimeMillis();
-		for(int i = 0; i < numOfTests; i++) {
-			tmpString = "test number " + i + " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddd";
-			tmpByte = tmpString.getBytes();
-			rest = (16-(tmpByte.length%16));
-			text = new byte[tmpByte.length+rest];
-			System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
-			plain = new byte[text.length];
-			blocks = (int)Math.ceil(text.length/16);
-			res = new byte[blocks][16];
-			byte[] tmp = new byte[16];
-			for(int j = 0; j < blocks; j++) {
-				System.arraycopy(text, j*16, tmp, 0, 16);
-				aes2.encrypt(tmp, 0, res[j], 0, aesKey, 16);
-			}
-			for(int j = 0; j < blocks; j++) {
-				aes2.decrypt(res[j], 0, plain, j*16, aesKey, 16);
-			}
-		}
-		logCipher.addDetails(numOfTests + " Rijndael (implementation two) encryption and decryption in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms (" + tmpByte.length + " bytes)");
 		btnPerformance.setEnabled(true);
 	}
 
@@ -545,9 +524,10 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 	public void getStatus(STATUS type, String message, String details) {
 		if(type==STATUS.SESSION_TIMEOUT)
 			lblSessionTimeout.setText(message + " s");
-		if(type==STATUS.INCOMING_CONNECTION) {
+		if(type==STATUS.INCOMING_CONNECTION) 
 			addConnection(message, false);
-		}
+		if(type==STATUS.ACTIVE_CIPHER_SUITE)
+			lblActiveCipherSuite.setText(message);
 			
 	}
 
@@ -557,6 +537,12 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 	public void addLog(LogEvent le, DefaultMutableTreeNode root) {
 		lstLogTreeModel.insertNodeInto(new DefaultMutableTreeNode(le), root, root.getChildCount());
 		lstLogTree.repaint();
+	}
+	
+	private byte[] createBytes(int length, int seed) {
+		byte[] b = new byte[length];
+		b[0] = (byte)seed;
+		return b;
 	}
 
 	@Override
@@ -599,7 +585,19 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 			else if(arg0.getSource() instanceof JCheckBox) {
 				JCheckBox changed = (JCheckBox)arg0.getSource();
 				try {
-					TLSEngine.findCipherSuite(changed.getText()).setEnabled(changed.isSelected());
+					CipherSuite tmpSuite = TLSEngine.findCipherSuite(changed.getText());
+					if(tmpSuite != null) {
+						tmpSuite.setEnabled(changed.isSelected());
+						System.out.println("cipher suite " + changed.getText() + " " + changed.isSelected());
+					}
+					else {
+						for(ICompression comp : ICompression.allCompressionMethods) {
+							if(comp.getName() == changed.getText()) {
+								comp.setEnabled(changed.isSelected());
+								System.out.println("cipher suite " + changed.getText() + " " + changed.isSelected());
+							}
+						}
+					}
 				} catch(Exception e) {
 					Tools.printerr(e.getMessage());
 				}
@@ -608,6 +606,7 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		}
 		
 	}
+	
 
 	private class ListAction extends MouseAdapter {
 		/*

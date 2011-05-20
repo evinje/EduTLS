@@ -1,5 +1,9 @@
 package common;
 
+import java.io.File;
+
+import crypto.ICipher;
+
 /**
  * The Tools class provides several
  * string and byte manipulation methods
@@ -193,5 +197,23 @@ public class Tools {
 	public static void printerr(String msg) {
 		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
 		System.err.println(ste.getClassName() + " " + ste.getMethodName() + " " + ste.getLineNumber() + ": " + msg);
+	}
+	
+	public static void initCryptographicPrimitives() throws ClassNotFoundException {
+		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.None());
+		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.Rijndael());
+		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.Rijndael2());
+		
+		crypto.ICompression.allCompressionMethods.add(new crypto.compression.None());
+		crypto.ICompression.allCompressionMethods.add(new crypto.compression.ZLib());
+		
+		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.None());
+		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.DH(0));
+		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.RSA(0));
+		
+		crypto.IMac.allMacAlgorithms.add(new crypto.mac.None());
+		crypto.IMac.allMacAlgorithms.add(new crypto.mac.SHA1());
+		crypto.IMac.allMacAlgorithms.add(new crypto.mac.SHA256());
+		
 	}
 }

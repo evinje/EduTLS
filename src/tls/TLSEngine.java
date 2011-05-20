@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import javax.management.timer.Timer;
 
-import server.IPeerHost;
+import server.IPeerCommunicator;
 import tls.IApplication.STATUS;
 
 import common.Log;
@@ -43,7 +43,7 @@ public class TLSEngine {
 	private TLSHandshake handshake;
 	private IApplication app;
 	private State state;
-	private IPeerHost peer;	
+	private IPeerCommunicator peer;	
 	
 	/**
 	 * The TLSEngine constructor
@@ -51,7 +51,7 @@ public class TLSEngine {
 	 * @param app	IApplication, the application utilizing the TLSEngine
 	 * @returns	Nothing, it is a constructor
 	 */
-	public TLSEngine(IPeerHost peer, IApplication app) throws AlertException {
+	public TLSEngine(IPeerCommunicator peer, IApplication app) throws AlertException {
 		this.peer = peer;
 		this.app = app;
 		state = new State(peer);
@@ -90,6 +90,7 @@ public class TLSEngine {
 		le.addLogEvent(state.getHandshakeLog());
 		if(handshake.isFinished()) {
 			le.addDetails("Connection successful");
+			app.getStatus(STATUS.ACTIVE_CIPHER_SUITE, state.getCipherSuite().getName(), "");
 			return true;
 		}
 		le.addDetails("Connection failed");
@@ -130,6 +131,9 @@ public class TLSEngine {
 			handshake.receive(record.getPlaintext());
 			while(handshake.hasMoreMessages()) {
 				send(new TLSRecord(state, handshake.getNextMessage()));
+			}
+			if(handshake.isFinished()) {
+				app.getStatus(STATUS.ACTIVE_CIPHER_SUITE, state.getCipherSuite().getName(), "");
 			}
 		}
 		else {
@@ -217,34 +221,39 @@ public class TLSEngine {
 	private static ArrayList<CipherSuite> getAllCipherSuites() {
 		ArrayList<CipherSuite> tmpCipherSuites = new ArrayList<CipherSuite>();
 		
-		byte[] value = new byte[] {(byte)0xC0,0x23};
+		try {
+			Tools.initCryptographicPrimitives();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		crypto.mac.SHA256 sha256 = new crypto.mac.SHA256();
 		crypto.mac.SHA1 sha1 = new crypto.mac.SHA1();
 		crypto.cipher.Rijndael aes = new crypto.cipher.Rijndael();
-		crypto.compression.None compression = new crypto.compression.None();
 		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);
 		crypto.keyexchange.DH dh = new crypto.keyexchange.DH(512);
 		
 		// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
-		String name = "ECDHE_AES256_SHA256";
-		tmpCipherSuites.add(new CipherSuite(name,value, sha256, aes, compression, dh));
+		String name = "DH AES SHA256";
+		byte value = 0x23;
+		tmpCipherSuites.add(new CipherSuite(name,value, sha256, aes, dh));
 		
 		// TLS_RSA_WITH_AES_256_CBC_SHA
-		name = "RSA_AES256_SHA-256";
-		value = new byte[] {0x00, 0x35};
-		tmpCipherSuites.add(new CipherSuite(name, value, sha256, aes, compression, rsa));
+		name = "RSA AES SHA256";
+		value = 0x35;
+		tmpCipherSuites.add(new CipherSuite(name, value, sha256, aes, rsa));
 		
 		// TLS_RSA_WITH_AES_128_CBC_SHA
-		name = "RSA_AES128_SHA-1";
-		value = new byte[] {0x00, 0x2F};
-		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, compression, rsa));
+		name = "RSA AES SHA1";
+		value = 0x2F;
+		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, rsa));
+		
 		
 		return tmpCipherSuites;
 	}
 	
-	public static CipherSuite findCipherSuite(byte[] value) {
+	public static CipherSuite findCipherSuite(byte value) {
 		for(CipherSuite sc : allCipherSuites)
-			if(sc.getValue()[0] == value[0] && sc.getValue()[1] == value[1])
+			if(sc.getValue() == value)
 				return sc;
 		return null;
 	}

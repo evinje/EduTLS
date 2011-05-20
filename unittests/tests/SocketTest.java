@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import junit.framework.TestCase;
+import server.Listener;
 import server.PeerSocket;
 
 import common.Tools;
@@ -28,16 +29,16 @@ public class SocketTest extends TestCase {
 	
 	public void testSocketPerformance() {
 		long start = System.currentTimeMillis();
-		for(int i = 0; i < 5; i++) {
-			Tools.print("Test " + i + ": " + (System.currentTimeMillis()-start) + "ms");
+		for(int i = 0; i < 100; i++) {
+			//Tools.print("Test " + i + ": " + (System.currentTimeMillis()-start) + "ms");
 			if(!PeerSocket.testConnection("localhost"))
 				fail("Didn't work :(");
 		}
 	}
 	
-	public void aaatestSocket() {
+	public void testSocket() {
 		Socket s;
-		byte[] output = new byte[] {  };
+		byte[] output = new byte[] { };
 		byte[] inHeader = new byte[tls.TLSEngine.HEADER_SIZE];
 		byte[] inContent;
 		try {
@@ -55,14 +56,19 @@ public class SocketTest extends TestCase {
 			int contentSize = inHeader[1];
 			inContent = new byte[contentSize];
 			is.read(inContent);
-			
+			os.write(Listener.CONNECTION_TYPE_TEST);
+			os.flush();
+			if(inHeader[0] != Listener.CONNECTION_TYPE_TEST)
+				fail("Wrong return code");
 			s.close();
+			
+			
 		} catch (UnknownHostException e) {
 			fail("testSocket() - UnknownHostException");
 		} catch (SocketException e) {
 			fail("testSocket() - SocketException" + e.getMessage());
 		} catch (IOException e) {
-			fail("testSocket() - IOException");
+			
 		}
 	}
 	

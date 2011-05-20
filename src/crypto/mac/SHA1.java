@@ -197,6 +197,11 @@ public class SHA1 implements crypto.IMac {
 		return 160;
 	}
 
+	@Override
+	public String getName() {
+		return "SHA-1";
+	}
+
 	// -----------------------------------------------------------------
 	// Exerciser (compares our hashes with Sun's hashes on random data).
 	// -----------------------------------------------------------------

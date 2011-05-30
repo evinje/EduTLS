@@ -11,8 +11,9 @@ import java.util.ArrayList;
  */
 public interface ICipher {
 	public int getBlockSize();
+	public int getKeySize();
 	public void cipher(byte[] input, int inOff, byte[] output, int outOff);
-	public String getAlgorithmName();
+	public String getName();
 	public void init(boolean forEncryption, byte[] key);
 	public static ArrayList<ICipher> allCipherAlgorithms = new ArrayList<ICipher>();
 }

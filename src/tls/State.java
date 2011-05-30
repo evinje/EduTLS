@@ -8,7 +8,7 @@ import common.Tools;
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;
-import crypto.IMac;
+import crypto.IHash;
 import crypto.PRF;
 
 public class State {
@@ -40,7 +40,7 @@ public class State {
 	public State(IPeerCommunicator peer) {
 		this.peer = peer;
 		cipherSuite = new CipherSuite("NONE",(byte)0x0,
-				new crypto.mac.None(),
+				new crypto.hash.None(),
 				new crypto.cipher.None(),
 				new crypto.keyexchange.None());
 		compressionMethod = new crypto.compression.None();
@@ -106,7 +106,7 @@ public class State {
 		return cipherSuite.getKeyExchange();
 	}
 
-	public IMac getMacAlgorithm() {
+	public IHash getMacAlgorithm() {
 		return cipherSuite.getMac();
 	}
 
@@ -199,10 +199,12 @@ public class State {
 	private void generateKeys() {
 		// setting up the right size
 		LogEvent keyGeneration = new LogEvent("Generating the key block","");
-		client_write_MAC_key = new byte[getMacAlgorithm().getSize()];
-		server_write_MAC_key = new byte[getMacAlgorithm().getSize()];
-		client_write_encryption_key = new byte[getCipherAlgorithm().getBlockSize()];
-		server_write_encryption_key = new byte[getCipherAlgorithm().getBlockSize()];
+		// the hash length is returned in bits, must divide by 8 to get bytes
+		client_write_MAC_key = new byte[getMacAlgorithm().getSize()/8];
+		server_write_MAC_key = new byte[getMacAlgorithm().getSize()/8];
+		client_write_encryption_key = new byte[getCipherAlgorithm().getKeySize()];
+		server_write_encryption_key = new byte[getCipherAlgorithm().getKeySize()];
+		// IV = block size in CBC mode
 		client_write_IV = new byte[getCipherAlgorithm().getBlockSize()];
 		server_write_IV = new byte[getCipherAlgorithm().getBlockSize()];
 		

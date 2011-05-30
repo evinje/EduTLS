@@ -118,7 +118,7 @@ public class TLSRecord {
 			// TODO: Encrypt mac with mac key
 			ciphertext = new byte[input.length-TLSEngine.HEADER_SIZE-macSize];
 			System.arraycopy(input, TLSEngine.HEADER_SIZE, ciphertext, 0, ciphertext.length);
-			byte[] expectedMac = state.getMacAlgorithm().getMac(ciphertext);
+			byte[] expectedMac = state.getMacAlgorithm().getHash(ciphertext);
 			if(!Tools.compareByteArray(mac, expectedMac))
 				throw new AlertException(AlertException.alert_fatal,AlertException.insufficient_security, "Mac decryption error");
 			defragment();
@@ -235,7 +235,7 @@ public class TLSRecord {
 			Tools.byteCopy(c, cipherNoHeader);
 			// size is reported in bits, not bytes
 			byte[] mac = new byte[state.getMacAlgorithm().getSize()/8];
-			mac = state.getMacAlgorithm().getMac(cipherNoHeader);
+			mac = state.getMacAlgorithm().getHash(cipherNoHeader);
 			// TODO: Encrypt mac with mac key
 			byte[] cipherWithMac = new byte[cipherNoHeader.length+mac.length];
 			cipherWithMac = Tools.byteAppend(cipherNoHeader, mac);

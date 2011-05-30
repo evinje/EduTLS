@@ -82,7 +82,7 @@ public class ClientKeyExchange implements IHandshakeMessage {
 	@Override
 	public String getStringValue() {
 		if(keyExchange != null) {
-			String tmp = "Algorithm: " + keyExchange.getAlgorithm() + LogEvent.NEWLINE;
+			String tmp = "Algorithm: " + keyExchange.getName() + LogEvent.NEWLINE;
 			tmp += "Public Key: " + keyExchange.getPublicKey() + LogEvent.NEWLINE;
 			tmp += "Modulus: " + keyExchange.getPublicModulus();
 			return tmp;

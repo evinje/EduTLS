@@ -150,7 +150,7 @@ public class RSA implements crypto.IKeyExchange {
 
 
 	@Override
-	public String getAlgorithm() {
+	public String getName() {
 		return ALGORITHM_NAME;
 	}
 

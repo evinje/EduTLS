@@ -10,7 +10,7 @@ public class None implements crypto.ICipher {
 	}
 
 	@Override
-	public String getAlgorithmName() {
+	public String getName() {
 		return "None";
 	}
 
@@ -22,6 +22,11 @@ public class None implements crypto.ICipher {
 	@Override
 	public void cipher(byte[] input, int inOff, byte[] output, int outOff) {
 		Tools.byteCopy(input, output);
+	}
+
+	@Override
+	public int getKeySize() {
+		return 0;
 	}
 
 }

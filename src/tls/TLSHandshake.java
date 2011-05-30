@@ -1,6 +1,5 @@
 package tls;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 
 import tls.State.ConnectionEnd;
@@ -14,9 +13,11 @@ import tls.handshake.ServerHello;
 import tls.handshake.ServerHelloDone;
 import tls.handshake.ServerKeyExchange;
 
-import common.Log;
 import common.LogEvent;
 import common.Tools;
+
+import crypto.IRandomGen;
+import crypto.random.BlumBlumShub;
 
 public class TLSHandshake {
 	public static final byte HELLO_REQUEST = 0;
@@ -36,7 +37,7 @@ public class TLSHandshake {
 	public static final int SESSION_SIZE = 16;
 	public static final int RANDOM_SIZE = 28;
 	
-	private static SecureRandom sr = new SecureRandom();
+	private static IRandomGen random = new BlumBlumShub(256);
 
 	private State state;
 	private byte[] clientRandom;
@@ -142,7 +143,8 @@ public class TLSHandshake {
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected handshake message: " + lastMessage);
 			serverRandom = new byte[RANDOM_SIZE];
 			// generates the server random
-			genenerateRandom(serverRandom);
+			serverRandom = random.randBytes(serverRandom.length);
+			
 			// parse the client hello message
 			clientHello = new ClientHello(content);
 			// adds the client hello to handshakemessage log
@@ -182,7 +184,7 @@ public class TLSHandshake {
 					// not valid resume
 					state.addHandshakeLog("Session resume failed. Client provided session id, but was not valid");
 					// generates a new session id, and send it to the client
-					genenerateRandom(sessionId);
+					sessionId = random.randBytes(sessionId.length);
 					serverHello.setSessionId(sessionId);
 				}
 			}
@@ -243,7 +245,7 @@ public class TLSHandshake {
 		case HELLO_REQUEST:
 			// Server send HelloRequest, Client respond with ClientHello
 			clientRandom = new byte[RANDOM_SIZE];
-			genenerateRandom(clientRandom);
+			clientRandom = random.randBytes(clientRandom.length);
 			state.setClientRandom(clientRandom);
 			State tmpState = TLSEngine.findState(state.getPeerHost());
 			if(tmpState != null)
@@ -298,7 +300,7 @@ public class TLSHandshake {
 				clientKeyExchange = new ClientKeyExchange(serverHello.getChosenCipherSuite().getKeyExchange());
 			else {
 				preMasterSecret = new byte[RANDOM_SIZE];
-				genenerateRandom(preMasterSecret);
+				preMasterSecret = random.randBytes(preMasterSecret.length);
 				clientKeyExchange = new ClientKeyExchange(preMasterSecret);
 			}
 			state.setPreMasterSecret(clientKeyExchange.getByte());
@@ -336,8 +338,8 @@ public class TLSHandshake {
 		}
 	}
 
-	public static void genenerateRandom(byte[] input) {
-		sr.nextBytes(input);
-	}
+//	public static void genenerateRandom(byte[] input) {
+//		sr.nextBytes(input);
+//	}
 
 }

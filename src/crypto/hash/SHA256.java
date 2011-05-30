@@ -1,4 +1,4 @@
-package crypto.mac;
+package crypto.hash;
 /*
  * Copyright 2004-2010 H2 Group. Multiple-Licensed under the H2 License,
  * Version 1.0, and under the Eclipse Public License, Version 1.0
@@ -12,7 +12,7 @@ import java.util.Arrays;
  * http://gpeerreview.googlecode.com/svn
  */
 
-public class SHA256 implements crypto.IMac {
+public class SHA256 implements crypto.IHash {
     /**
      * The first 32 bits of the fractional parts of the cube roots of the first
      * sixty-four prime numbers.
@@ -149,7 +149,7 @@ public class SHA256 implements crypto.IMac {
 	}
 
 	@Override
-	public byte[] getMac(byte[] input) {
+	public byte[] getHash(byte[] input) {
 		return getHash(input, false);
 	}
 

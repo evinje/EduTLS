@@ -11,6 +11,8 @@ import common.LogEvent;
 import common.Tools;
 
 import crypto.ICompression;
+import crypto.IRandomGen;
+import crypto.random.BlumBlumShub;
 
 public class ServerHello implements IHandshakeMessage {
 	private byte[] serverRandom;
@@ -30,8 +32,11 @@ public class ServerHello implements IHandshakeMessage {
 		offset += serverRandom.length;
 		Tools.byteCopy(serverHello, getSessionId(), offset);
 		offset += getSessionId().length;
-		if(Tools.isEmptyByteArray(getSessionId()))
-				TLSHandshake.genenerateRandom(getSessionId());
+		if(Tools.isEmptyByteArray(getSessionId())) {
+			IRandomGen random = new BlumBlumShub(TLSHandshake.SESSION_SIZE);
+			sessionId = random.randBytes(sessionId.length);
+//				TLSHandshake.genenerateRandom(getSessionId());
+		}
 
 		byte[] cipher = new byte[1];
 		Tools.byteCopy(serverHello, cipher, offset);

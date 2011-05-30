@@ -5,6 +5,8 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
+import crypto.random.BlumBlumShub;
+
 
 public class Main implements Observer {
 

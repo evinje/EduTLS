@@ -17,7 +17,7 @@ public class None implements crypto.IKeyExchange {
 	}
 
 	@Override
-	public String getAlgorithm() {
+	public String getName() {
 		return "None";
 	}
 

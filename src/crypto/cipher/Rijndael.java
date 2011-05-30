@@ -505,8 +505,9 @@ public class Rijndael implements crypto.ICipher {
 		  WorkingKey = generateWorkingKey(key, forEncryption);
 		  this.doEncrypt = forEncryption;
 	 }
-
-	 public final String getAlgorithmName()
+	 
+	  @Override
+	 public final String getName()
 	 {
 		 return "Rijndael";
 	 }
@@ -700,6 +701,11 @@ public class Rijndael implements crypto.ICipher {
 		 C3 = (Si[r3 & 255] & 255) ^ ((Si[(r2 >> 8) & 255] & 255) << 8) ^ ((Si[(r1 >> 16) & 255] & 255) << 16)
 		 ^ (Si[(r0 >> 24) & 255] << 24) ^ KW[0][3];
 	 }
+
+	@Override
+	public int getKeySize() {
+		return 16;
+	}
 
 
 //	 public void transformBlock(byte[] src, int srcoff, byte[] dst, int dstoff)

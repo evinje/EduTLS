@@ -7,11 +7,11 @@ public class CertificateAuthority {
 	private BigInteger keyPublic = new BigInteger("65537");
 	private BigInteger keyModulus = new BigInteger("6748457434223561369539453856373795718496273894856278910465516323380589533225673792048825481557743979249759666933493210819338227161744392693538904133252356337523108543814430928676785035160281603402333129208047796998854370931019927310876277918757785666810882899605180246290968292531831646509424746563790398331819794899314997261738960378927495244162794502750352808897401677324250159011765819512606492717713445238234958691959224073094607697377293400259852212846811357155510763188882744134194065521505238955125122355691507773278492622094455940894669216116800857470312735705711970194576557142067111533339752750251998295049");
 	private crypto.keyexchange.RSA myKeyPair;
-	private crypto.mac.SHA1 hashAlg;
+	private crypto.hash.SHA1 hashAlg;
 	
 	public CertificateAuthority() {
 		 myKeyPair = new crypto.keyexchange.RSA(keyModulus, keyPublic, keyPrivate);
-		 hashAlg = new crypto.mac.SHA1();
+		 hashAlg = new crypto.hash.SHA1();
 	}
 	
 	public String getSignatureAlgorithm() {
@@ -19,7 +19,7 @@ public class CertificateAuthority {
 	}
 	
 	public String getSignature(String certificate) {
-		byte[] hash = hashAlg.getMac(certificate.getBytes(TLSEngine.ENCODING));
+		byte[] hash = hashAlg.getHash(certificate.getBytes(TLSEngine.ENCODING));
 		String sign = myKeyPair.encrypt(new BigInteger(hash)).toString();
 		return sign;
 	}

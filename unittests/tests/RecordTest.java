@@ -11,8 +11,11 @@ import tls.TLSHandshake;
 import tls.TLSRecord;
 
 import common.Tools;
+
+import crypto.IRandomGen;
 import crypto.cipher.Rijndael;
-import crypto.mac.SHA1;
+import crypto.hash.SHA1;
+import crypto.random.BlumBlumShub;
 
 public class RecordTest extends TestCase {
 	
@@ -25,8 +28,9 @@ public class RecordTest extends TestCase {
 		CipherSuite cipherSuite = new CipherSuite("",(byte)0x1,sha,aes,rsa);
 		byte[] clientRandom = new byte[TLSHandshake.RANDOM_SIZE];
 		byte[] serverRandom = new byte[TLSHandshake.RANDOM_SIZE];
-		TLSHandshake.genenerateRandom(clientRandom);
-		TLSHandshake.genenerateRandom(serverRandom);
+		IRandomGen random = new BlumBlumShub(TLSHandshake.RANDOM_SIZE);
+		clientRandom = random.randBytes(clientRandom.length);
+		serverRandom = random.randBytes(serverRandom.length);
 		state.setCipherSuite(cipherSuite);
 		state.setClientRandom(clientRandom);
 		state.setServerRandom(serverRandom);

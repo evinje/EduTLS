@@ -1,9 +1,9 @@
-package crypto.mac;
+package crypto.hash;
 
-public class None implements crypto.IMac {
+public class None implements crypto.IHash {
 
 	@Override
-	public byte[] getMac(byte[] input) {
+	public byte[] getHash(byte[] input) {
 		return new byte[0];
 	}
 

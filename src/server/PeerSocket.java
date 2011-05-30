@@ -17,10 +17,17 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
+/**
+ * This is a implementation of 
+ * the IPeerCommunicator interface, defining 
+ * the methods with socket communication. 
+ * 
+ * 	@author Eivind Vinje
+ */
 public class PeerSocket implements IPeerCommunicator {
 	private static final int SECOND = 1000;
 	public static final int SOCKET_TIMEOUT = 30*SECOND;
-	public static final int SOCKET_OPEN_TIMEOUT = 1*SECOND;
+	public static final int SOCKET_OPEN_TIMEOUT = 2*SECOND;
 	public static final int SOCKET_WRITE_SLEEP = 200;
 	
 	private Socket socket;
@@ -78,7 +85,9 @@ public class PeerSocket implements IPeerCommunicator {
 
 	public PeerSocket(String host) throws UnknownHostException, IOException {
 		this.host = host;
-		this.socket = new Socket(host, Listener.PORT);
+		SocketAddress socketAddress = new InetSocketAddress(host, Listener.PORT);
+		socket = new Socket();
+		socket.connect(socketAddress, SOCKET_OPEN_TIMEOUT);
 		init();
 		this.os.write(new byte[] { Listener.CONNECTION_TYPE_TLS });
 		this.isClient = true;
@@ -88,7 +97,9 @@ public class PeerSocket implements IPeerCommunicator {
 	public boolean reconnect() {
 		Log.get().add("Reconnecting to " + host,"Connection was lost, starting to reconnect.");
 		try {
-			this.socket = new Socket(host, Listener.PORT);
+			SocketAddress socketAddress = new InetSocketAddress(host, Listener.PORT);
+			socket = new Socket();
+			socket.connect(socketAddress, SOCKET_OPEN_TIMEOUT);
 			init();
 			this.os.write(new byte[] { Listener.CONNECTION_TYPE_TLS });
 		} catch (UnknownHostException e) {

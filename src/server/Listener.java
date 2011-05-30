@@ -20,7 +20,14 @@ import common.Log;
 import common.LogEvent;
 import common.Tools;
 
-
+/**
+ * This class creates a server socket which waits for 
+ * incoming connections. When another peer connects, 
+ * the listener service forwards the request to TLSEngine.
+ * 
+ * @author Eivind Vinje
+ *
+ */
 public class Listener implements Runnable {
 	public static final int PORT = 12345;
 	public static final byte CONNECTION_TYPE_TEST = '0';

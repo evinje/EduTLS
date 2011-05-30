@@ -1,4 +1,4 @@
-package crypto.mac;
+package crypto.hash;
 
 //*********************************************************************
 //This class is a port of the SHA-1 algorithm included with GAIM, which
@@ -16,7 +16,7 @@ package crypto.mac;
 //else's) and simplified it to remove test code and objects when
 //not actually being debugged (to reduce its deployment footprint!)
 //*********************************************************************
-public class SHA1 implements crypto.IMac {       
+public class SHA1 implements crypto.IHash {       
 	private int[] m_h , m_w;
 	private int m_iLenW;
 	private long m_lBitCount;
@@ -187,7 +187,7 @@ public class SHA1 implements crypto.IMac {
 
 
 	@Override
-	public byte[] getMac(byte[] input) {
+	public byte[] getHash(byte[] input) {
 		this.update(input);
 		return this.digest();
 	}

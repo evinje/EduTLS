@@ -132,7 +132,7 @@ public class HandshakeTest extends TestCase {
 	public void testCertificate() throws UnsupportedEncodingException, AlertException {
 		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);
 		String subject = "JUnit test subject";
-		Certificate cert = new Certificate(subject, rsa, new crypto.mac.SHA1());
+		Certificate cert = new Certificate(subject, rsa, new crypto.hash.SHA1());
 		Certificate cert2 = new Certificate(cert.getByteValue());
 		
 		assertEquals(subject, cert2.getSubject());

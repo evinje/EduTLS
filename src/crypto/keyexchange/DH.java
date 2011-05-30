@@ -63,7 +63,7 @@ public class DH implements IKeyExchange {
 	}
 
 	@Override
-	public String getAlgorithm() {
+	public String getName() {
 		return ALGORITHM_NAME;
 	}
 

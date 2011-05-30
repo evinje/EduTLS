@@ -798,7 +798,7 @@ public final class Rijndael2 implements crypto.ICipher {
 	}
 
 	@Override
-	public String getAlgorithmName() {
+	public String getName() {
 		return "Rijndael2";
 	}
 
@@ -811,6 +811,11 @@ public final class Rijndael2 implements crypto.ICipher {
 			e.printStackTrace();
 		}
 		
+	}
+
+	@Override
+	public int getKeySize() {
+		return 16;
 	}
 
 

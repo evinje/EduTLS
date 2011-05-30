@@ -138,7 +138,16 @@ public class Tools {
 		return sb.toString();
 	}
 	
-
+	/**
+	 * Compares each byte in the two arrays
+	 * and examine if they are equal. If the 
+	 * length is different on the arrays,
+	 * it always return false
+	 * 
+	 * @param one byte[] The first byte array
+	 * @param two byte[] The second byte array
+	 * @returns	boolean 
+	 */
 	public static boolean compareByteArray(byte[] one, byte[] two) {
 		if(one.length != two.length)
 			return false;
@@ -199,21 +208,4 @@ public class Tools {
 		System.err.println(ste.getClassName() + " " + ste.getMethodName() + " " + ste.getLineNumber() + ": " + msg);
 	}
 	
-	public static void initCryptographicPrimitives() throws ClassNotFoundException {
-		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.None());
-		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.Rijndael());
-		crypto.ICipher.allCipherAlgorithms.add(new crypto.cipher.Rijndael2());
-		
-		crypto.ICompression.allCompressionMethods.add(new crypto.compression.None());
-		crypto.ICompression.allCompressionMethods.add(new crypto.compression.ZLib());
-		
-		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.None());
-		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.DH(0));
-		crypto.IKeyExchange.allKeyExchangeAlgorithms.add(new crypto.keyexchange.RSA(0));
-		
-		crypto.IMac.allMacAlgorithms.add(new crypto.mac.None());
-		crypto.IMac.allMacAlgorithms.add(new crypto.mac.SHA1());
-		crypto.IMac.allMacAlgorithms.add(new crypto.mac.SHA256());
-		
-	}
 }

@@ -8,7 +8,7 @@ import java.util.Date;
 import common.Tools;
 
 import crypto.IKeyExchange;
-import crypto.IMac;
+import crypto.IHash;
 
 public class Certificate {
 	/*
@@ -50,9 +50,9 @@ public class Certificate {
 	private long notValidBefore;
 	private long notValidAfter;
 	private IKeyExchange publicKey;
-	private IMac mac;
+	private IHash mac;
 	
-	public Certificate(String subject, IKeyExchange publicKey, IMac mac) {
+	public Certificate(String subject, IKeyExchange publicKey, IHash mac) {
 		this.serialNumber = serialNumberMax;
 		this.notValidBefore = System.currentTimeMillis();
 		Calendar cal = Calendar.getInstance();
@@ -104,7 +104,7 @@ public class Certificate {
 		str.append("\t\tNot After: " + getDateFormated(notValidAfter) + "\n");
 		str.append("\tSubject: " + subject + "\n");
 		str.append("\tSubject Public Key Info:" + "\n");
-		str.append("\tPublic Key Algorithm: " + publicKey.getAlgorithm() + "\n");
+		str.append("\tPublic Key Algorithm: " + publicKey.getName() + "\n");
 		str.append("\tRSA Public Key: (" + publicKey.getPublicModulus().bitCount() + " bit) \n");
 		str.append("\t\tModulus:" + publicKey.getPublicModulus() + "\n");
 		str.append("\t\tExponent: " + publicKey.getPublicKey());

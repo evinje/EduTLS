@@ -46,7 +46,7 @@ import common.Tools;
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;
-import crypto.IMac;
+import crypto.IHash;
 
 /**
  * The graphical user interface
@@ -137,7 +137,7 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlChatArea.add(btnSend);
 
 		JPanel pnlLogArea = new JPanel();
-		pnlLogArea.setBounds(202, 11, 572, 352);
+		pnlLogArea.setBounds(202, 11, 572, 362);
 		pnlLogArea.setBorder(BorderFactory.createTitledBorder("Log"));
 		getContentPane().add(pnlLogArea);
 		pnlLogArea.setLayout(null);
@@ -168,20 +168,20 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlLogList.add(scrollPane);
 
 		JPanel pnlLogDetailedInfo = new JPanel();
-		pnlLogDetailedInfo.setBounds(10, 172, 552, 169);
+		pnlLogDetailedInfo.setBounds(10, 172, 552, 179);
 		pnlLogArea.add(pnlLogDetailedInfo);
 		pnlLogDetailedInfo.setLayout(null);
 
 		txtLogInfo = new TextArea("",5,50,TextArea.SCROLLBARS_VERTICAL_ONLY);
 		txtLogInfo.setBackground(getBackground());
 		txtLogInfo.setEditable(false);
-		txtLogInfo.setBounds(10, 11, 532, 147);
+		txtLogInfo.setBounds(10, 22, 532, 147);
 		pnlLogDetailedInfo.add(txtLogInfo);
 
 
 		JPanel pnlConnectionsArea = new JPanel();
 		pnlConnectionsArea.setBorder(BorderFactory.createTitledBorder("Connections"));
-		pnlConnectionsArea.setBounds(10, 11, 182, 352);
+		pnlConnectionsArea.setBounds(10, 11, 182, 309);
 		getContentPane().add(pnlConnectionsArea);
 		pnlConnectionsArea.setLayout(null);
 
@@ -209,18 +209,14 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlConnectionsArea.add(separator);
 
 		JLabel lblChosenCipherSuite = new JLabel("Active cipher suite:");
-		lblChosenCipherSuite.setBounds(10, 249, 162, 14);
+		lblChosenCipherSuite.setBounds(10, 235, 162, 14);
 		pnlConnectionsArea.add(lblChosenCipherSuite);
 		lblChosenCipherSuite.setEnabled(false);
 
 		lblActiveCipherSuite = new JLabel("");
 		lblActiveCipherSuite.setEnabled(false);
-		lblActiveCipherSuite.setBounds(10, 274, 162, 67);
+		lblActiveCipherSuite.setBounds(10, 253, 162, 20);
 		pnlConnectionsArea.add(lblActiveCipherSuite);
-
-		JSeparator separator_1 = new JSeparator();
-		separator_1.setBounds(10, 237, 162, 2);
-		pnlConnectionsArea.add(separator_1);
 
 		lstModelSessions = new DefaultListModel();
 		lstExistingSessions = new JList(lstModelSessions);
@@ -232,21 +228,21 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlConnectionsArea.add((lstExistingSessions));
 
 		JLabel lblSessionTimeoutInfo = new JLabel("Session timeout:");
-		lblSessionTimeoutInfo.setBounds(10, 327, 110, 14);
+		lblSessionTimeoutInfo.setBounds(10, 284, 110, 14);
 		pnlConnectionsArea.add(lblSessionTimeoutInfo);
 
 		lblSessionTimeout = new JLabel("");
-		lblSessionTimeout.setBounds(130, 327, 46, 14);
+		lblSessionTimeout.setBounds(130, 284, 46, 14);
 		pnlConnectionsArea.add(lblSessionTimeout);
 
 		JPanel pnlSettingsArea = new JPanel();
 		pnlSettingsArea.setBorder(BorderFactory.createTitledBorder("Settings & Tools"));
-		pnlSettingsArea.setBounds(10, 373, 182, 178);
+		pnlSettingsArea.setBounds(10, 320, 182, 231);
 		getContentPane().add(pnlSettingsArea);
 		pnlSettingsArea.setLayout(null);
 
 		JPanel pnlCipherSuites = new JPanel();
-		pnlCipherSuites.setBounds(10, 20, 162, 113);
+		pnlCipherSuites.setBounds(10, 20, 162, 166);
 		pnlSettingsArea.add(pnlCipherSuites);
 		pnlCipherSuites.setLayout(null);
 
@@ -255,7 +251,7 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		lblCipherSuites.setBounds(0, 0, 142, 14);
 		pnlCipherSuites.add(lblCipherSuites);
 		btnPerformance = new JButton("Performance");
-		btnPerformance.setBounds(10, 146, 162, 23);
+		btnPerformance.setBounds(10, 197, 162, 23);
 		btnPerformance.addActionListener(new ActionListenerImpl());
 		pnlSettingsArea.add(btnPerformance);
 
@@ -269,9 +265,9 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 			pnlCipherSuites.add(cbxCipherSuite);
 			i=i+20;
 		}
-		JLabel lblCompMethod = new JLabel("Compression methods:");
-		lblCompMethod.setBounds(0, i, 160, 20);
-		pnlCipherSuites.add(lblCompMethod);
+		JLabel lblCompressionMethods = new JLabel("Compression methods:");
+		lblCompressionMethods.setBounds(0, i, 160, 20);
+		pnlCipherSuites.add(lblCompressionMethods);
 		i=i+20;
 		
 		for(ICompression comp : ICompression.allCompressionMethods) {
@@ -303,12 +299,12 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		for(IKeyExchange ke : IKeyExchange.allKeyExchangeAlgorithms) {
 			testStart = System.currentTimeMillis();
 			ke.initKeys(512);
-			logKeyExchange.addDetails("Generated 512 bits " + ke.getAlgorithm() + " keys in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			logKeyExchange.addDetails("Generated 512 bits " + ke.getName() + " keys in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 			testStart = System.currentTimeMillis();
 			for(int i = 0; i < numOfTests; i++) {
 				ke.setYb(ke.getPublicKey());
 			}
-			logKeyExchange.addDetails("Algorithm: " + ke.getAlgorithm() + " in " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			logKeyExchange.addDetails("Algorithm: " + ke.getName() + " in " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 		}
 		// TEST HASH FUNCTIONS
 		LogEvent logMac = new LogEvent("Performance test of hash functions","");
@@ -316,20 +312,20 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		numOfTests = 5000;
 		logMac.addDetails("Performing " + numOfTests + " hash tests");		
 		testStart = System.currentTimeMillis();
-		for(IMac mac : IMac.allMacAlgorithms) {
+		for(IHash mac : IHash.allHashAlgorithms) {
 			testStart = System.currentTimeMillis();
 			for(int i = 0; i < numOfTests; i++) {
-				mac.getMac(createBytes(16,i));
+				mac.getHash(createBytes(16,i));
 			}
 			logMac.addDetails("Algorithm: " + mac.getName() + " (16 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 			testStart = System.currentTimeMillis();
 			for(int i = 0; i < numOfTests; i++) {
-				mac.getMac(createBytes(512,i));
+				mac.getHash(createBytes(512,i));
 			}
 			logMac.addDetails("Algorithm: " + mac.getName() + " (512 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 			testStart = System.currentTimeMillis();
 			for(int i = 0; i < numOfTests; i++) {
-				mac.getMac(createBytes(16384,i));
+				mac.getHash(createBytes(16384,i));
 			}
 			logMac.addDetails("Algorithm: " + mac.getName() + " (16384 bytes) in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 		}
@@ -366,7 +362,7 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		
 		LogEvent logCipher = new LogEvent("Performance test of encryption algorithms","");
 		performanceTest.addLogEvent(logCipher);
-		numOfTests = 5000;
+		numOfTests = 500;
 		logCipher.addDetails("Performing " + numOfTests + " encryption and decryption tests");		
 		byte[] key = new byte[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 		byte[] tmpByte=null, text, plain;
@@ -374,10 +370,10 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		for(ICipher cipher : ICipher.allCipherAlgorithms) {
 			int blocks=0, rest;
 			testStart = System.currentTimeMillis();
+			int bs = cipher.getBlockSize();
 			for(int i = 0; i < numOfTests; i++) {
-				int bs = cipher.getBlockSize();
 				cipher.init(true, key);
-				tmpByte = createBytes(512,i);
+				tmpByte = createBytes(256,i);
 				rest = (bs-(tmpByte.length%bs));
 				text = new byte[tmpByte.length+rest];
 				System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
@@ -395,29 +391,28 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 					cipher.cipher(res[j], 0, plain, j*bs);
 				}
 			}
-			logCipher.addDetails("Algorithm: " + cipher.getAlgorithmName() + " (512 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			logCipher.addDetails("Algorithm: " + cipher.getName() + " (256 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 			testStart = System.currentTimeMillis();
 			for(int i = 0; i < numOfTests; i++) {
-				tmpByte =  createBytes(4028,i);
-				rest = (16-(tmpByte.length%16));
+				tmpByte =  createBytes(2048,i);
+				rest = (bs-(tmpByte.length%bs));
 				text = new byte[tmpByte.length+rest];
 				System.arraycopy(tmpByte, 0, text, 0, tmpByte.length);
 				plain = new byte[text.length];
-				blocks = (int)Math.ceil(text.length/16);
-				res = new byte[blocks][16];
-				byte[] tmp = new byte[16];
+				blocks = (int)Math.ceil(text.length/bs);
+				res = new byte[blocks][bs];
+				byte[] tmp = new byte[bs];
 				cipher.init(true, key);
 				for(int j = 0; j < blocks; j++) {
-					System.arraycopy(text, j*16, tmp, 0, 16);
+					System.arraycopy(text, j*bs, tmp, 0, bs);
 					cipher.cipher(tmp, 0, res[j], 0);
 				}
-				//			System.out.println("test " + i);
 				cipher.init(false, key);
 				for(int j = 0; j < blocks; j++) {
-					cipher.cipher(res[j], 0, plain, j*16);
+					cipher.cipher(res[j], 0, plain, j*bs);
 				}
 			}
-			logCipher.addDetails("Algorithm: " + cipher.getAlgorithmName() + " (4028 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
+			logCipher.addDetails("Algorithm: " + cipher.getName() + " (2048 bytes)  in: " + Math.abs(System.currentTimeMillis()-testStart) + " ms");
 
 		}
 		btnPerformance.setEnabled(true);

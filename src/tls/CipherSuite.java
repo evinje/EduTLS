@@ -3,10 +3,10 @@ package tls;
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;
-import crypto.IMac;
+import crypto.IHash;
 
 public class CipherSuite {
-	private IMac macAlg;
+	private IHash macAlg;
 	private ICipher cipherAlg;
 	private IKeyExchange keyExchangeAlg;
 	private String name;
@@ -22,7 +22,7 @@ public class CipherSuite {
 	 * @param keyEx IKeyexchange, the key exchange algorithm
 	 * @param compAlg ICompression, the compression algorithm
 	 */
-	public CipherSuite(String name, byte value, IMac mac, ICipher cipher, IKeyExchange keyEx) {
+	public CipherSuite(String name, byte value, IHash mac, ICipher cipher, IKeyExchange keyEx) {
 		this.name = name;
 		this.value = value;
 		this.macAlg = mac;
@@ -43,7 +43,7 @@ public class CipherSuite {
 		return name;
 	}
 
-	public IMac getMac() {
+	public IHash getMac() {
 		return macAlg;
 	}
 

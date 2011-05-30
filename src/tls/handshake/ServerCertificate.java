@@ -153,7 +153,7 @@ public class ServerCertificate implements IHandshakeMessage {
 		cert.append(VALID_NOT_BEFORE_INFO + notValidBefore.toString() + NL);
 		cert.append(VALID_NOT_AFTER_INFO + notValidAfter.toString() + NL);
         cert.append(SUBJECT_INFO + subject + NL);
-        cert.append(PUBLIC_KEY_ALG_INFO + key.getAlgorithm() + NL);
+        cert.append(PUBLIC_KEY_ALG_INFO + key.getName() + NL);
         cert.append(PUBLIC_KEY_INFO + " (" + key.getPublicKey().bitLength() + " bit):" + NL);
         cert.append(MODULUS_INFO + " (" + key.getPublicModulus().bitLength() + " bit):" + NL);
         cert.append("" + key.getPublicModulus() + NL);

@@ -15,7 +15,7 @@ import common.Tools;
 import crypto.ICipher;
 import crypto.ICompression;
 import crypto.IKeyExchange;
-import crypto.IMac;
+import crypto.IHash;
 
 /*
  * TLSEngine is the heart of the
@@ -38,7 +38,7 @@ public class TLSEngine {
 	public static final byte HANDSHAKE = 22;
 	
 	// List of all cipher suites
-	public static ArrayList<CipherSuite> allCipherSuites = getAllCipherSuites();
+	public static ArrayList<CipherSuite> allCipherSuites = createCipherSuites();
 	private static ArrayList<State> states = new ArrayList<State>();
 	private TLSHandshake handshake;
 	private IApplication app;
@@ -217,36 +217,52 @@ public class TLSEngine {
 		return null;
 	}
 	
-	
-	private static ArrayList<CipherSuite> getAllCipherSuites() {
+	private static ArrayList<CipherSuite> createCipherSuites() {
 		ArrayList<CipherSuite> tmpCipherSuites = new ArrayList<CipherSuite>();
 		
-		try {
-			Tools.initCryptographicPrimitives();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		crypto.mac.SHA256 sha256 = new crypto.mac.SHA256();
-		crypto.mac.SHA1 sha1 = new crypto.mac.SHA1();
-		crypto.cipher.Rijndael aes = new crypto.cipher.Rijndael();
-		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);
-		crypto.keyexchange.DH dh = new crypto.keyexchange.DH(512);
+		// Cipher algorithms
+		ICipher rijndael = new crypto.cipher.Rijndael();
+		ICipher rijndael2 = new crypto.cipher.Rijndael2();
+		ICipher des = new crypto.cipher.DES();
+		ICipher.allCipherAlgorithms.add(rijndael);
+		ICipher.allCipherAlgorithms.add(rijndael2);
+		ICipher.allCipherAlgorithms.add(des);
+		// Compression methods
+		ICompression nocomp = new crypto.compression.None();
+		ICompression zlib = new crypto.compression.ZLib();
+		ICompression.allCompressionMethods.add(nocomp);
+		ICompression.allCompressionMethods.add(zlib);
+		// Key exchange algorithms
+		IKeyExchange dh = new crypto.keyexchange.DH(512);
+		IKeyExchange rsa = new crypto.keyexchange.RSA(512);
+		IKeyExchange.allKeyExchangeAlgorithms.add(dh);
+		IKeyExchange.allKeyExchangeAlgorithms.add(rsa);
+		// Mac algorithms
+		IHash sha1 = new crypto.hash.SHA1();
+		IHash sha256 = new crypto.hash.SHA256();
+		crypto.IHash.allHashAlgorithms.add(sha1);
+		crypto.IHash.allHashAlgorithms.add(sha256);
+		
 		
 		// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
 		String name = "DH AES SHA256";
-		byte value = 0x23;
-		tmpCipherSuites.add(new CipherSuite(name,value, sha256, aes, dh));
+		byte value = 0x20;
+		tmpCipherSuites.add(new CipherSuite(name,value, sha256, rijndael, dh));
 		
 		// TLS_RSA_WITH_AES_256_CBC_SHA
 		name = "RSA AES SHA256";
-		value = 0x35;
-		tmpCipherSuites.add(new CipherSuite(name, value, sha256, aes, rsa));
+		value = 0x21;
+		tmpCipherSuites.add(new CipherSuite(name, value, sha256, rijndael, rsa));
 		
 		// TLS_RSA_WITH_AES_128_CBC_SHA
 		name = "RSA AES SHA1";
-		value = 0x2F;
-		tmpCipherSuites.add(new CipherSuite(name, value, sha1, aes, rsa));
+		value = 0x22;
+		tmpCipherSuites.add(new CipherSuite(name, value, sha1, rijndael, rsa));
 		
+		// TLS_RSA_WITH_DES_CBC_SHA
+		name = "RSA DES SHA1";
+		value = 0x23;
+		tmpCipherSuites.add(new CipherSuite(name, value, sha1, des, rsa));
 		
 		return tmpCipherSuites;
 	}

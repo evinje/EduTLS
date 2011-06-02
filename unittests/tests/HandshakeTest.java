@@ -3,18 +3,22 @@ package tests;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-import common.Tools;
-
 import junit.framework.TestCase;
 import tls.AlertException;
-import tls.Certificate;
+import tls.CertificateAuthority;
 import tls.CipherSuite;
 import tls.State;
 import tls.TLSEngine;
 import tls.TLSHandshake;
 import tls.handshake.ClientHello;
 import tls.handshake.IHandshakeMessage;
+import tls.handshake.ServerCertificate;
 import tls.handshake.ServerHello;
+
+import common.Tools;
+
+import crypto.IRandomGen;
+import crypto.random.BlumBlumShub;
 
 public class HandshakeTest extends TestCase {
 	State state;
@@ -130,14 +134,26 @@ public class HandshakeTest extends TestCase {
 	}
 
 	public void testCertificate() throws UnsupportedEncodingException, AlertException {
-		crypto.keyexchange.RSA rsa = new crypto.keyexchange.RSA(512);
+		byte[] notSoRandom = new byte[TLSHandshake.RANDOM_SIZE];
+		
+		ServerHello serverHello = new ServerHello(new ClientHello(notSoRandom, new byte[TLSHandshake.SESSION_SIZE]),notSoRandom);
 		String subject = "JUnit test subject";
-		Certificate cert = new Certificate(subject, rsa, new crypto.hash.SHA1());
-		Certificate cert2 = new Certificate(cert.getByteValue());
+		ServerCertificate cert = new ServerCertificate(subject, serverHello);
+		ServerCertificate cert2 = new ServerCertificate(cert.getByte());
 		
-		assertEquals(subject, cert2.getSubject());
-		assertEquals(cert.getNotValidBefore(), cert2.getNotValidBefore());
-		assertEquals(cert.getNotValidAfter(), cert2.getNotValidAfter());
+		assertEquals(cert.getSubject(), cert2.getSubject());
 		
+//		assertEquals(cert.getNotValidBefore(), cert2.getNotValidBefore());
+//		assertEquals(cert.getNotValidAfter(), cert2.getNotValidAfter());
+		
+	}
+	
+	public void testCertificateAuthority() throws AlertException {
+		ServerHello serverHello = new ServerHello(new ClientHello(new byte[TLSHandshake.RANDOM_SIZE], new byte[TLSHandshake.SESSION_SIZE]), new byte[TLSHandshake.RANDOM_SIZE]);
+		String subject = "JUnit test subject";
+		ServerCertificate cert = new ServerCertificate(subject, serverHello);
+		
+		CertificateAuthority ca = new CertificateAuthority();
+		ca.verifySignature(cert.getStringValue());
 	}
 }

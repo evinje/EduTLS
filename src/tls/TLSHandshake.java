@@ -191,15 +191,18 @@ public class TLSHandshake {
 			// Send certificate
 			serverCertificate = new ServerCertificate(state.getPeerHost(), serverHello);
 			responseQueue.add(serverCertificate);
+			handshakeVerificationMessages.add(serverCertificate);
 			// Check if chosen cipher suite need server key exchange
 			// message. (only DHE_DSS, DHE_RSA, DH_anon)
 			if(serverHello.getChosenCipherSuite().getKeyExchange().requireServerKeyExchange()) {
 				serverKeyExchange = new ServerKeyExchange(serverHello);
 				responseQueue.add(serverKeyExchange);
+				handshakeVerificationMessages.add(serverKeyExchange);
 			}
 			// server hello done is the last message from server at this point
 			serverHelloDone = new ServerHelloDone();
 			responseQueue.add(serverHelloDone);
+			handshakeVerificationMessages.add(serverHelloDone);
 			break;
 		case CERTIFICATE_VERIFY: 
 			state.addHandshakeLog(new LogEvent("Received CertificateVerify", "Handshake failure, not implemented"));
@@ -228,7 +231,7 @@ public class TLSHandshake {
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Change cipher spec missing");
 			// Change Cipher Spec shall not be in the handshake verification messages
 			responseQueue.add(new ChangeCipherSpec());
-			clientFinished = new Finished(state, content);
+			clientFinished = new Finished(state, handshakeVerificationMessages, content);
 			state.addHandshakeLog(new LogEvent("Received Finished", clientFinished.getStringValue()));
 			state.setChangeCipherSpecServer();
 			serverFinished = new Finished(state, handshakeVerificationMessages);
@@ -251,6 +254,7 @@ public class TLSHandshake {
 			if(tmpState != null)
 				sessionId = tmpState.getSessionId();
 			clientHello = new ClientHello(clientRandom, sessionId);
+			handshakeVerificationMessages.add(clientHello);
 			responseQueue.add(clientHello);
 			break;
 		case SERVER_HELLO:
@@ -269,6 +273,7 @@ public class TLSHandshake {
 				sessionId = serverHello.getSessionId();
 				state.setSessionId(sessionId);
 			}
+			handshakeVerificationMessages.add(serverHello);
 			state.addHandshakeLog(new LogEvent("Received ServerHello", serverHello.getStringValue()));
 			break;
 		case CERTIFICATE:
@@ -276,6 +281,7 @@ public class TLSHandshake {
 			if(lastMessage != SERVER_HELLO)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverCertificate = new ServerCertificate(content);
+			handshakeVerificationMessages.add(serverCertificate);
 			state.addHandshakeLog(new LogEvent("Received Certificate", serverCertificate.getStringValue()));
 			break;
 		case SERVER_KEY_EXCHANGE:
@@ -283,7 +289,7 @@ public class TLSHandshake {
 			if(lastMessage != CERTIFICATE)
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			serverKeyExchange = new ServerKeyExchange(content);
-			
+			handshakeVerificationMessages.add(serverKeyExchange);
 			state.addHandshakeLog(new LogEvent("Received ServerKeyExchange",serverKeyExchange.getStringValue()));
 			break;
 		case CERTIFICATE_REQUEST:
@@ -303,8 +309,10 @@ public class TLSHandshake {
 				preMasterSecret = random.randBytes(preMasterSecret.length);
 				clientKeyExchange = new ClientKeyExchange(preMasterSecret);
 			}
+			handshakeVerificationMessages.add(serverHelloDone);
 			state.setPreMasterSecret(clientKeyExchange.getByte());
 			responseQueue.add(clientKeyExchange);
+			handshakeVerificationMessages.add(clientKeyExchange);
 			responseQueue.add(new ChangeCipherSpec());
 			state.setChangeCipherSpecClient();
 			state.setCipherSuite(serverHello.getChosenCipherSuite());
@@ -322,7 +330,7 @@ public class TLSHandshake {
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Unexpected message: " + lastMessage);
 			if(!state.getChangeCipherSpecServer())
 				throw new AlertException(AlertException.alert_fatal,AlertException.handshake_failure, "Missing change cipher spec");
-			serverFinished = new Finished(state, content);
+			serverFinished = new Finished(state, handshakeVerificationMessages, content);
 			if(state.isResumeSession()) {
 				responseQueue.add(new ChangeCipherSpec());
 				state.setChangeCipherSpecClient();

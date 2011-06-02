@@ -18,22 +18,22 @@ import common.Tools;
 import crypto.IKeyExchange;
 
 public class ServerCertificate implements IHandshakeMessage {
-	private final static String CERTIFICATE_INFO = "Certificate:";
-	private final static String DATA_INFO = "Data:";
-	private final static String VERSION_INFO = "Version:";
-	private final static String SERIAL_NUMBER_INFO = "Serial Number:";
-	private final static String SIGNATURE_ALG_INFO = "Signature Algorithm:";
-	private final static String ISSUER_INFO = "Issuer:";
-	private final static String VALIDITY_INFO = "Validity:";
-	private final static String VALID_NOT_BEFORE_INFO = "Not Before:";
-	private final static String VALID_NOT_AFTER_INFO = "Not After:";
-	private final static String SUBJECT_INFO = "Subject:";
-	private final static String PUBLIC_KEY_ALG_INFO = "Public Key Algorithm:";
-	private final static String PUBLIC_KEY_INFO = "Public Key";
-	private final static String MODULUS_INFO = "Modulus";
-	private final static String EXPONENT_INFO = "Exponent:";
+	public final static String CERTIFICATE_INFO = "Certificate:";
+	public final static String DATA_INFO = "Data:";
+	public final static String VERSION_INFO = "Version:";
+	public final static String SERIAL_NUMBER_INFO = "Serial Number:";
+	public final static String SIGNATURE_ALG_INFO = "Signature Algorithm:";
+	public final static String ISSUER_INFO = "Issuer:";
+	public final static String VALIDITY_INFO = "Validity:";
+	public final static String VALID_NOT_BEFORE_INFO = "Not Before:";
+	public final static String VALID_NOT_AFTER_INFO = "Not After:";
+	public final static String SUBJECT_INFO = "Subject:";
+	public final static String PUBLIC_KEY_ALG_INFO = "Public Key Algorithm:";
+	public final static String PUBLIC_KEY_INFO = "Public Key";
+	public final static String MODULUS_INFO = "Modulus";
+	public final static String EXPONENT_INFO = "Exponent:";
 	
-	private static final String NL = LogEvent.NEWLINE;
+	public static final String NL = LogEvent.NEWLINE;
 	private static int serialNumberCounter = 1;
 	private static int versionNumber = 1;
 	private static Object lock = new Object();
@@ -162,6 +162,17 @@ public class ServerCertificate implements IHandshakeMessage {
         cert.append(SIGNATURE_ALG_INFO + ca.getSignatureAlgorithm() + NL);
         cert.append(signature);
 		return cert.toString();
+	}
+	
+	public String getSubject() {
+		return subject;
+	}
+	
+	public long getNotValidBefore() {
+		return notValidBefore.getTime();
+	}
+	public long getNotValidAfter() {
+		return notValidAfter.getTime();
 	}
 
 }

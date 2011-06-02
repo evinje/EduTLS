@@ -102,6 +102,17 @@ public class State {
 		return cipherSuite.getCipher();
 	}
 	
+	/**
+	 * The verify data length is cipher suite
+	 * dependent. However, for all cipher suites
+	 * supported it is 12.
+	 * 
+	 * @return int 12
+	 */
+	public int getVerifyDataLength() {
+		return 12;
+	}
+	
 	public IKeyExchange getKeyExchangeAlgorithm() {
 		return cipherSuite.getKeyExchange();
 	}

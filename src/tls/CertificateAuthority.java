@@ -2,12 +2,15 @@ package tls;
 
 import java.math.BigInteger;
 
+import tls.handshake.ServerCertificate;
+
 public class CertificateAuthority {
 	private BigInteger keyPrivate = new BigInteger("4768620226420085249910311855725322790539122084788657954188596684861301269262873694398295742114212180585873173561348102492386793717447896999218558225291310587770193275005665445580693577342152388018402539231650723698322259453675524265173572644730046450554831424702319257911328587319363467199466866249128482334203076902496555678868422363029314714003579489069919392638623133069837812527386821832006627168164101899705737608532024287073069979996052766925413121529001478262682751479104428089440912344188443658206926448221339225450991502908432242552607865765008279830351944192783511039692273539603316345172910121321435047673");
 	private BigInteger keyPublic = new BigInteger("65537");
 	private BigInteger keyModulus = new BigInteger("6748457434223561369539453856373795718496273894856278910465516323380589533225673792048825481557743979249759666933493210819338227161744392693538904133252356337523108543814430928676785035160281603402333129208047796998854370931019927310876277918757785666810882899605180246290968292531831646509424746563790398331819794899314997261738960378927495244162794502750352808897401677324250159011765819512606492717713445238234958691959224073094607697377293400259852212846811357155510763188882744134194065521505238955125122355691507773278492622094455940894669216116800857470312735705711970194576557142067111533339752750251998295049");
 	private crypto.keyexchange.RSA myKeyPair;
 	private crypto.hash.SHA1 hashAlg;
+	private static String signatureAlgorithm = "sha1WithRSAEncryption";
 	
 	public CertificateAuthority() {
 		 myKeyPair = new crypto.keyexchange.RSA(keyModulus, keyPublic, keyPrivate);
@@ -15,12 +18,28 @@ public class CertificateAuthority {
 	}
 	
 	public String getSignatureAlgorithm() {
-		return "sha1WithRSAEncryption";
+		return signatureAlgorithm;
 	}
 	
 	public String getSignature(String certificate) {
 		byte[] hash = hashAlg.getHash(certificate.getBytes(TLSEngine.ENCODING));
 		String sign = myKeyPair.encrypt(new BigInteger(hash)).toString();
 		return sign;
+	}
+	
+	public boolean verifySignature(String certificate) {
+		int certStart = certificate.indexOf(ServerCertificate.SIGNATURE_ALG_INFO);
+		if(certStart == -1)
+			return false;
+		String signature = certificate.substring(certStart+ServerCertificate.SIGNATURE_ALG_INFO.length());
+		String certWithoutSign = certificate.substring(0, certStart);
+		if(!signature.startsWith(getSignatureAlgorithm()))
+			return false;
+		String signHash = signature.substring(signature.indexOf(ServerCertificate.NL) + ServerCertificate.NL.length());
+		
+		if(!getSignature(certWithoutSign).equals(signHash))
+			return false;
+		
+		return true;
 	}
 }

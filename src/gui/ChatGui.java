@@ -92,10 +92,8 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		setDefaultCloseOperation( DO_NOTHING_ON_CLOSE );  
 		addWindowListener(new ClosingAdapter() );
 		getContentPane().setLayout(null);
-//		logevents = new ArrayList<LogEvent>();
 		Log.get().addObserver(this);
 		initializeComponents();
-//		initializeActionListeners();
 	}
 
 	/*
@@ -146,13 +144,6 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 		pnlLogList.setLayout(null);
 		pnlLogList.setBounds(10, 21, 552, 149);
 		pnlLogArea.add(pnlLogList);
-
-		//		lstModelLog = new DefaultListModel();
-		//		lstLog = new JList(lstModelLog);
-		//		lstLog.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		//		lstLog.setBounds(0, 0, pnlLogList.getWidth(), pnlLogList.getHeight()-5);
-		//		lstLog.setPrototypeCellValue("Index 12345678901234567890123456789012345678901234567890123456789012345678901");
-		//		lstLog.addMouseListener(new ListAction());
 
 		treeRootNode = new DefaultMutableTreeNode("Application startup");
 		lstLogTree = new JTree(treeRootNode);
@@ -281,7 +272,6 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 			}
 		}
 		addConnection("localhost",false);
-		test();
 		repaint();
 	}
 
@@ -416,10 +406,6 @@ public class ChatGui extends JFrame implements tls.IApplication, Observer {
 
 		}
 		btnPerformance.setEnabled(true);
-	}
-
-	private void test() {
-		this.txtAddConnection.setText("192.168.10.105");
 	}
 
 	/*

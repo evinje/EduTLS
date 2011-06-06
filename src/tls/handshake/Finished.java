@@ -15,7 +15,7 @@ public class Finished implements IHandshakeMessage {
 	private State state;
 	private ArrayList<IHandshakeMessage> messages;
 	private byte[] prfvalue;
-	private ArrayList<String> handshakeMessages;
+	private ArrayList<String> handshakeMsgString;
 	
 	/**
 	 * Creates the finished message from the 
@@ -31,7 +31,7 @@ public class Finished implements IHandshakeMessage {
 		try {
 			calculatePRF(state.getEntityType(false).toString() + " finished");
 		} catch (IOException e) {
-			e.printStackTrace();
+			state.addHandshakeLog("Error when creating the Finished message");
 		}
 	}
 	
@@ -48,19 +48,27 @@ public class Finished implements IHandshakeMessage {
 		try {
 			calculatePRF(state.getEntityType(true).toString() + " finished");
 		} catch (IOException e) {
-			e.printStackTrace();
+			state.addHandshakeLog("Error when creating the Finished message");
 		}
-		if(Tools.compareByteArray(prfvalue, value))
-			System.out.println("NOT EQUAL!!");
+		if(!Tools.compareByteArray(prfvalue, value))
+			state.addHandshakeLog("Attention! The incoming handshake message is invalid!!");
 	}
 	
+	/**
+	 * Calculates the PRF value of all
+	 * handshake messages, the label, 
+	 * and the master secret for the
+	 * current connection state 
+	 * 
+	 * @param label The label to the PRF method
+	 */
 	private void calculatePRF(String label) throws IOException {
 		Tools.print(messages.size() + "");
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-		handshakeMessages = new ArrayList<String>();
+		handshakeMsgString = new ArrayList<String>();
 		for(IHandshakeMessage m : messages) {
 			buf.write(m.getByte());
-			handshakeMessages.add(m.toString());
+			handshakeMsgString.add(m.toString());
 		}
 		byte[] value = new byte[buf.size()];
 		value = buf.toByteArray();
@@ -92,7 +100,7 @@ public class Finished implements IHandshakeMessage {
 		sb.append(LogEvent.NEWLINE + LogEvent.NEWLINE);
 		sb.append("Where master_secret = " + Tools.byteArrayToString(state.getMasterSecret()));
 		sb.append(LogEvent.NEWLINE + " and handshake messages = " + LogEvent.NEWLINE);
-		for(String s : handshakeMessages)
+		for(String s : handshakeMsgString)
 			sb.append(LogEvent.INDENT + s + LogEvent.NEWLINE);
 		return sb.toString();
 	}

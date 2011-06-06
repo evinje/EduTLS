@@ -33,7 +33,7 @@ public class State {
 	private IPeerCommunicator peer;
 	private boolean changeCipherSpecClient;
 	private boolean changeCipherSpecServer;
-	private boolean isResumeSession;
+	private boolean isResumableSession;
 
 	private LogEvent handshakeLog;
 	
@@ -46,7 +46,7 @@ public class State {
 		compressionMethod = new crypto.compression.None();
 		changeCipherSpecClient = false;
 		changeCipherSpecServer = false;
-		isResumeSession = false;
+		isResumableSession = false;
 		handshakeLog = new LogEvent("Initializing connection state","Remote host is " + peer.getPeerId());
 		setSessionId(new byte[TLSHandshake.SESSION_SIZE]);
 	}
@@ -199,12 +199,12 @@ public class State {
 	public void resumeSession(State state) {
 		this.cipherSuite = state.getCipherSuite();
 		preMasterSecret = state.getPreMasterSecret();
-		isResumeSession = true;
+		isResumableSession = true;
 		generateKeys();
 	}
 	
 	public boolean isResumeSession() {
-		return isResumeSession;
+		return isResumableSession;
 	}
 
 	private void generateKeys() {

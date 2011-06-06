@@ -1,5 +1,6 @@
 package common;
 
+import java.util.ArrayList;
 import java.util.Observable;
 
 /*
@@ -9,6 +10,7 @@ import java.util.Observable;
  */
 public class Log extends Observable {
 	private static volatile Log INSTANCE = null;
+	private ArrayList<LogEvent> events;
 	
 	public static Log get() { 
 	if(INSTANCE == null) 
@@ -17,16 +19,23 @@ public class Log extends Observable {
 	}
 	
 	private Log() {
-		// empty constructor
+		events = new ArrayList<LogEvent>();
 	}
 	
 	public void add(LogEvent e) {
+		events.add(e);
 		setChanged();
 		notifyObservers(e);
 	}
 	
 	public void add(String title, String details) {
 		add(new LogEvent(title, details));
+	}
+	
+	public LogEvent get(int index) {
+		if(index < 0 || index > events.size())
+			return null;
+		return events.get(index);
 	}
 
 }
